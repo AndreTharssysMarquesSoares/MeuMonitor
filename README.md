@@ -48,3 +48,12 @@ Rode o servidor para garantir que tudo está certo:
 ```bash
 python manage.py runserver
 ```
+
+#### Obs:
+Se houver mais dados pertinentes sendo salvos no banco de dados é importante que todo o restante da equipe seja alertada, para que depois do git pull, todos rodem este comando para o banco de dados ficar igual, quando se houver esta necessdidade.
+
+```bash
+python manage.py loaddata initial_data.json
+```
+
+O Django vai ler o arquivo JSON e recriar exatamente os mesmos dados no banco db.sqlite3.
