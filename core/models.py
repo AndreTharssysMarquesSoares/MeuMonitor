@@ -5,14 +5,14 @@ from django.core.exceptions import ValidationError
 # BLOCO A: TABELAS DE VALIDAÇÃO (MOCK SIGAA)
 class AlunoValido(models.Model):
     matricula = models.CharField(max_length=20, unique=True)
-    nome_completo = models.CharField(max_length=200)
+    nome_completo = models.CharField(max_length=255)
 
     def __str__(self):
         return f"{self.matricula} - {self.nome_completo}"
 
 class DisciplinaValida(models.Model):
     codigo = models.CharField(max_length=20, unique=True)
-    nome = models.CharField(max_length=100)
+    nome = models.CharField(max_length=255)
 
     def __str__(self):
         return f"{self.codigo} - {self.nome}"
