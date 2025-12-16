@@ -16,8 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from core.views import login_view, login_view, cadastro_view, confirmar_identidade_view, concluir_cadastro_view
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),
-]
+    path('login/', login_view, name='login'),
+    path('cadastro/', cadastro_view, name='cadastro'),
+    path('confirmar_identidade/', confirmar_identidade_view, name='confirmar_identidade'),
+    path('concluir_cadastro/', concluir_cadastro_view, name='concluir_cadastro'),
