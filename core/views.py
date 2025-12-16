@@ -7,3 +7,11 @@ def login_view(request):
 
 def cadastro_view(request):
     return render(request, 'core/cadastro.html')
+
+
+def confirmar_identidade_view(request):
+    return render(request, 'core/confirmar_identidade.html')
+
+
+def concluir_cadastro_view(request):
+    return render(request, 'core/definir_senha.html')
