@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Monitores</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">MM</div>
+                    <div><h1 class="text-gray-900 font-bold text-lg leading-tight">Meu Monitor</h1><p class="text-xs text-gray-500">{{ admin_nome }}</p></div>
+                </div>
+                <nav class="hidden md:flex space-x-8 items-center absolute left-1/2 transform -translate-x-1/2">
+                    <a href="{% url 'admin_disciplinas' %}" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Disciplinas</a>
+                    <a href="#" class="bg-blue-50 text-blue-700 px-3 py-2 rounded-md text-sm font-medium">Monitores</a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Moderação</a>
+                </nav>
+                <div class="flex items-center gap-4"><a href="{% url 'login' %}" class="text-sm font-medium text-gray-500 hover:text-red-600">Sair</a></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <div><h2 class="text-2xl font-bold text-gray-900">Gerenciar Monitores</h2></div>
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+                <div class="relative w-full sm:w-64">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></div>
+                    <input type="text" id="search" onkeyup="filtrar()" placeholder="Buscar monitor..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <button onclick="toggle('modal-add')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2 shadow-sm whitespace-nowrap">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg> Adicionar
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white shadow rounded-lg overflow-hidden border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200" id="tabela">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Nome</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Matrícula</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Disciplina</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for m in monitores %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ m.nome }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ m.matricula }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ m.disciplina_nome }} <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded ml-1">{{ m.disciplina_cod }}</span></td>
+                        <td class="px-6 py-4 text-sm font-medium">
+                            <button onclick="prepDes('{{ m.nome }}', '{{ m.disciplina_nome }}')" class="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded-full flex items-center gap-1" title="Desassociar">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" /></svg>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div id="no-results" class="hidden px-6 py-8 text-center text-gray-500 text-sm">Nenhum monitor encontrado.</div>
+        </div>
+    </main>
+
+    <div id="modal-add" class="fixed inset-0 z-50 hidden" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm" onclick="toggle('modal-add')"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto flex items-center justify-center p-4">
+            <div class="relative bg-white rounded-lg shadow-xl w-full max-w-lg">
+                <div class="px-4 py-3 border-b border-gray-100"><h3 class="text-lg font-semibold">Adicionar Monitor</h3></div>
+                <form method="POST" action="{% url 'admin_monitores' %}" class="px-4 py-4 space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="adicionar">
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Matrícula (9 dígitos)</label><input type="text" id="add-mat" name="matricula" required maxlength="9" oninput="validarAdd()" class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border text-sm focus:ring-blue-500" placeholder="Ex: 123456789"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Código Disciplina (7 dígitos)</label><input type="text" id="add-cod" name="codigo_disciplina" required maxlength="7" oninput="validarAdd()" class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border text-sm focus:ring-blue-500" placeholder="Ex: 1234567"></div>
+                    <div class="flex flex-row-reverse gap-2 pt-2">
+                        <button type="submit" id="btn-add" disabled class="bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-semibold cursor-not-allowed transition-colors">Confirmar</button>
+                        <button type="button" onclick="toggle('modal-add')" class="bg-white text-gray-700 px-4 py-2 rounded-md text-sm border hover:bg-gray-50 transition-colors">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-des" class="fixed inset-0 z-50 hidden" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm" onclick="toggle('modal-des')"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto flex items-center justify-center p-4">
+            <div class="relative bg-white rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
+                <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-yellow-100 mb-3"><svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></div>
+                <h3 class="text-lg font-semibold text-gray-900">Desassociar Monitor</h3>
+                <p class="mt-2 text-sm text-gray-500">Para confirmar a remoção de <span id="des-nome" class="font-bold"></span>, digite a matrícula do monitor abaixo:</p>
+                
+                <form method="POST" action="{% url 'admin_monitores' %}" class="mt-4 space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="desassociar">
+                    
+                    <input type="text" id="des-input" name="matricula_confirmacao" required maxlength="9" oninput="validarDes()" 
+                           class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border text-sm text-center focus:ring-red-500 focus:border-red-500" 
+                           placeholder="Digite a matrícula (9 dígitos)">
+                    
+                    <div class="flex justify-center gap-3 pt-2">
+                        <button type="submit" id="btn-des" disabled class="bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-semibold cursor-not-allowed flex-1 transition-colors">Confirmar</button>
+                        <button type="button" onclick="toggle('modal-des')" class="bg-white text-gray-900 px-4 py-2 rounded-md text-sm border hover:bg-gray-50 flex-1">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggle(id) { document.getElementById(id).classList.toggle('hidden'); }
+        
+        function prepDes(nome, disc) {
+            document.getElementById('des-nome').innerText = nome;
+            // Limpa o campo e desabilita botão ao abrir
+            const input = document.getElementById('des-input');
+            input.value = ''; 
+            validarDes(); // Reseta estado
+            toggle('modal-des');
+        }
+
+        function filtrar() {
+            let val = document.getElementById("search").value.toLowerCase();
+            let rows = document.querySelectorAll("#tabela tbody tr");
+            let count = 0;
+            rows.forEach(r => {
+                let show = r.innerText.toLowerCase().includes(val);
+                r.style.display = show ? "" : "none";
+                if(show) count++;
+            });
+            document.getElementById("no-results").classList.toggle("hidden", count > 0);
+        }
+
+        // Validação Adicionar (Matricula + Código)
+        function validarAdd() {
+            const mat = document.getElementById('add-mat');
+            const cod = document.getElementById('add-cod');
+            const btn = document.getElementById('btn-add');
+            
+            mat.value = mat.value.replace(/\D/g, '');
+            cod.value = cod.value.replace(/\D/g, '');
+
+            const okMat = mat.value.length === 9;
+            const okCod = cod.value.length === 7;
+
+            const setStyle = (el, valid) => {
+                el.classList.toggle('border-green-500', valid);
+                el.classList.toggle('focus:ring-green-500', valid);
+                el.classList.toggle('border-red-500', !valid && el.value.length > 0);
+            };
+
+            setStyle(mat, okMat);
+            setStyle(cod, okCod);
+
+            btn.disabled = !(okMat && okCod);
+            btn.className = (okMat && okCod) 
+                ? "bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition-colors" 
+                : "bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-semibold cursor-not-allowed transition-colors";
+        }
+
+        function validarDes() {
+            const input = document.getElementById('des-input');
+            const btn = document.getElementById('btn-des');
+            
+            input.value = input.value.replace(/\D/g, '');
+            const isValid = input.value.length === 9;
+
+            input.classList.toggle('border-green-500', isValid);
+            input.classList.toggle('border-red-500', !isValid && input.value.length > 0);
+
+            btn.disabled = !isValid;
+            btn.className = isValid 
+                ? "bg-red-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-red-500 flex-1 transition-colors" 
+                : "bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-semibold cursor-not-allowed flex-1 transition-colors";
+        }
+    </script>
+</body>
+</html>

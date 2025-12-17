@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Interesses - Meu Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div class="flex justify-between h-16 items-center">
+                
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">MM</div>
+                    <div>
+                        <h1 class="text-gray-900 font-bold text-lg leading-tight">Meu Monitor</h1>
+                        <p class="text-[10px] text-gray-400 font-medium">Anna Carollyne</p>
+                    </div>
+                </div>
+                
+                <nav class="hidden md:flex space-x-8 items-center absolute left-1/2 transform -translate-x-1/2">
+                    <a href="#" class="text-gray-500 hover:text-gray-900 text-sm font-medium">Dashboard</a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 text-sm font-medium">Disciplinas</a>
+                    <a href="#" class="text-blue-600 text-sm font-semibold border-b-2 border-blue-600 pb-5 translate-y-[10px]">Meus interesses</a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 text-sm font-medium">Meus fóruns</a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 text-sm font-medium">Meu perfil</a>
+                </nav>
+
+                <div class="flex items-center gap-5">
+                    <button class="relative text-gray-400 hover:text-gray-500 transition-colors">
+                        <span class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center border-2 border-white font-bold">1</span>
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </button>
+                    
+                    <a href="#" class="flex items-center gap-2 text-gray-500 hover:text-red-600 text-sm font-medium">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Sair
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-16 text-center">
+        <h2 class="text-3xl font-black text-blue-900 mb-2">Minhas Disciplinas</h2>
+        <p class="text-gray-500 mb-12">Clique para ver os detalhes da monitoria.</p>
+        
+        <div class="grid gap-4 text-left">
+            <div onclick="toggleModal('modal-calculo')" 
+                 class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-blue-500 hover:shadow-xl cursor-pointer transition-all flex justify-between items-center group">
+                <div class="flex items-center gap-5">
+                    <div class="bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner">MA026</div>
+                    <h3 class="text-xl font-bold text-gray-800 group-hover:text-blue-700">Cálculo Diferencial e Integral I</h3>
+                </div>
+                <svg class="w-6 h-6 text-gray-200 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-calculo" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-md transition-all" onclick="toggleModal('modal-calculo')"></div>
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden border border-gray-100">
+                
+                <div class="bg-blue-600 px-8 py-7 text-white">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200 mb-1 leading-tight">Horários de Monitoria</p>
+                            <h3 class="font-extrabold text-2xl leading-tight">Cálculo I</h3>
+                        </div>
+                        <button onclick="toggleModal('modal-calculo')" class="hover:rotate-90 transition-transform duration-300">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="p-8 space-y-4">
+                    
+                    <div class="bg-gray-50/50 p-5 rounded-3xl border border-gray-100">
+                        <div class="flex items-center gap-4 mb-3">
+                            <div class="w-10 h-10 bg-blue-600 text-white rounded-2xl flex items-center justify-center font-bold text-lg shadow-md">A</div>
+                            <span class="font-bold text-gray-800 text-lg">Anna Carollyne</span>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-600 ml-1">
+                            <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>Segunda-feira: 10:00 às 12:00</div>
+                            <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>Quarta-feira: 14:00 às 16:00</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50/50 p-5 rounded-3xl border border-gray-100">
+                        <div class="flex items-center gap-4 mb-3">
+                            <div class="w-10 h-10 bg-gray-700 text-white rounded-2xl flex items-center justify-center font-bold text-lg shadow-md">J</div>
+                            <span class="font-bold text-gray-800 text-lg">João</span>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-600 ml-1">
+                            <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-gray-500 rounded-full"></span>Quinta-feira: 08:00 às 10:00</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="p-5 bg-gray-50/80 text-center border-t border-gray-100">
+                     <button onclick="toggleModal('modal-calculo')" class="text-sm font-bold text-gray-500 hover:text-gray-800 transition-colors">Fechar</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.toggle('hidden');
+            document.body.style.overflow = modal.classList.contains('hidden') ? 'auto' : 'hidden';
+        }
+    </script>
+</body>
+</html>
