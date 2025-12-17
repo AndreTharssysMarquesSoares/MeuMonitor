@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
+from django.http import HttpResponse
 from core.services.aluno_service import AlunoService
 from core.repositories.usuario_repository import UsuarioRepository
 from core.exceptions.usuario_exceptions import (
@@ -64,7 +65,8 @@ def concluir_cadastro_view(request):
     return redirect('cadastro')
 
 def home(request):
-    return render(request, 'core/home.html')
+    # Retorna apenas texto, sem buscar template, para não dar erro
+    return HttpResponse("<h1>Página Inicial (Aguardando Merge da Branch de Front-end)</h1>")
 
 def login_view(request):
     if request.user.is_authenticated:
