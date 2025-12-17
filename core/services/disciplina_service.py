@@ -1,5 +1,4 @@
 from core.repositories.disciplina_repository import DisciplinaRepository
-from core.services.aluno_service import AlunoService
 from core.exceptions.disciplina_exceptions import DisciplinaJaCadastradaException, CodigoDisciplinaInvalidoException
 
 class DisciplinaService:
@@ -41,6 +40,8 @@ class DisciplinaService:
     
     @staticmethod
     def get_monitores(codigo):
+        from core.services.aluno_service import AlunoService
+        
         disciplina = DisciplinaService.get_Disciplina(codigo=codigo)
         return AlunoService.getMonitoresDisciplina(disciplina)
         

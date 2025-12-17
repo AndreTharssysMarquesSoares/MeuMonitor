@@ -1,13 +1,11 @@
 from django.urls import path
-from . import views  # Importa o arquivo views.py que criamos
+from . import views
 
 urlpatterns = [
-    # Rota da Home (chama a função 'home' do views.py)
+    path('cadastro/', views.cadastro_view, name='cadastro'),
+    path('definir-senha/', views.definir_senha_view, name='definir_senha'),
+    path('concluir-cadastro/', views.concluir_cadastro_view, name='concluir_cadastro'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
     path('', views.home, name='home'),
-
-    # Rota de Cadastro (chama a função 'cadastro' do views.py)
-    path('cadastro/', views.cadastro, name='cadastro'),
-
-    # Rota de Disciplinas (chama a função 'listar_disciplinas' do views.py)
-    path('disciplinas/', views.listar_disciplinas, name='listar_disciplinas'),
 ]
