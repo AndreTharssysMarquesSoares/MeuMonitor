@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.http import HttpResponse
 from core.services.aluno_service import AlunoService
+from django.contrib.auth.decorators import login_required
 from core.repositories.usuario_repository import UsuarioRepository
 from core.exceptions.usuario_exceptions import (
     MatriculaInvalidaException, 
@@ -70,17 +71,11 @@ def home(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('home')
+        return redirect('dashboard')
 
     if request.method == 'POST':
         matricula = request.POST.get('matricula')
         senha = request.POST.get('senha')
-
-        if not matricula or len(matricula) != 9 or not matricula.isdigit():
-            return render(request, 'core/login.html', {
-                'erro': "Formato inválido: A matrícula deve conter exatamente 9 números.",
-                'matricula': matricula
-            })
 
         try:
             if AlunoService.validarAcessoAluno(matricula=matricula, senha=senha):
@@ -88,7 +83,7 @@ def login_view(request):
                 
                 if user and user.is_active:
                     login(request, user)
-                    return redirect('home')
+                    return redirect('dashboard')
                 else:
                     return render(request, 'core/login.html', {
                         'erro': "Usuário inativo.",
@@ -109,9 +104,67 @@ def login_view(request):
 
     return render(request, 'core/login.html')
 
-def logout_view(request):
-    logout(request)
-    return redirect('login')
+@login_required(login_url='login') 
+def dashboard(request):
+    # Dados Fakes (Mocados) para a Sprint 1 
+    mock_horarios = [
+        {
+            'disciplina': 'Cálculo Numérico',
+            'dia': 'Segunda-feira',
+            'hora': '14:00 - 16:00',
+            'monitor': 'Ana Silva',
+            'sala': 'B-102'
+        },
+        {
+            'disciplina': 'Algoritmos e Estrutura de Dados',
+            'dia': 'Quarta-feira',
+            'hora': '10:00 - 12:00',
+            'monitor': 'Carlos Eduardo',
+            'sala': 'Lab 3'
+        },
+        {
+            'disciplina': 'Circuitos Digitais',
+            'dia': 'Sexta-feira',
+            'hora': '08:00 - 10:00',
+            'monitor': 'Beatriz Lima',
+            'sala': 'Sala 204'
+        }
+    ]
+
+    mock_topicos = [
+        {
+            'titulo': 'Como resolver o erro de segmentação no Lab 2?',
+            'disciplina_cod': 'AED-2025',
+            'autor': 'João Santos',
+            'respostas': 3,
+            'data': '17 Dez'
+        },
+        {
+            'titulo': 'Dúvida sobre Transformada de Laplace',
+            'disciplina_cod': 'CALC-NUM',
+            'autor': 'Maria Oliveira',
+            'respostas': 0,
+            'data': '16 Dez'
+        },
+        {
+            'titulo': 'Data da prova final alterada?',
+            'disciplina_cod': 'CIRC-DIG',
+            'autor': 'Pedro Alencar',
+            'respostas': 12,
+            'data': '15 Dez'
+        }
+    ]
+
+    context = {
+        'aluno_nome': request.user.first_name if request.user.is_authenticated else 'Aluno Visitante',
+        'horarios': mock_horarios,
+        'topicos': mock_topicos,
+    }
+    return render(request, 'core/dashboard.html', context)
+
+def disciplinas(request):
+    # Retorna apenas texto, sem buscar template, para não dar erro
+    return HttpResponse("<h1>Disciplinas (Aguardando Merge da Branch de Front-end)</h1>")
 
 def logout_view(request):
     logout(request)
