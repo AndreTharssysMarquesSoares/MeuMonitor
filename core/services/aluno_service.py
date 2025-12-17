@@ -121,5 +121,6 @@ class AlunoService:
     @staticmethod
     def validarAcessoAluno(matricula, senha) -> bool: 
         aluno = UsuarioRepository.get_aluno(matricula=matricula)
+        if not aluno: raise AlunoNaoCadastradoException()
         if not aluno.check_password(senha): raise SenhaIncorretaException()
         return True
