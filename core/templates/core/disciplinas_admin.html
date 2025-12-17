@@ -3,52 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar Disciplinas - Admin</title>
+    <title>Gerenciar Disciplinas</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 min-h-screen font-sans">
-    
-    <header class="bg-white shadow-sm sticky top-0 z-50">
+
+    <header class="bg-white shadow-sm sticky top-0 z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
             <div class="flex justify-between items-center h-16">
-                
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">MM</div>
-                    <div>
-                        <h1 class="text-gray-900 font-bold text-lg leading-tight">Meu Monitor</h1>
-                        <p class="text-xs text-gray-500">Admin Sistema</p>
-                    </div>
+                    <div><h1 class="text-gray-900 font-bold text-lg leading-tight">Meu Monitor</h1><p class="text-xs text-gray-500">{{ admin_nome }}</p></div>
                 </div>
-                
                 <nav class="hidden md:flex space-x-8 items-center absolute left-1/2 transform -translate-x-1/2">
-                    <a href="#" class="bg-blue-50 text-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">Disciplinas</a>
-                    <a href="#" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Monitores</a>
-                    <a href="#" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Moderação</a>
+                    <a href="#" class="bg-blue-50 text-blue-700 px-3 py-2 rounded-md text-sm font-medium">Disciplinas</a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Monitores</a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Moderação</a>
                 </nav>
-
-                <div class="flex items-center gap-4">
-                    <button class="text-gray-400 hover:text-gray-600">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                    </button>
-                    <a href="/login/" class="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-red-600 transition-colors">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                        Sair
-                    </a>
-                </div>
+                <div class="flex items-center gap-4"><a href="{% url 'login' %}" class="text-sm font-medium text-gray-500 hover:text-red-600">Sair</a></div>
             </div>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
         <div class="flex justify-between items-center mb-8">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-900">Gerenciar Disciplinas</h2>
-                <p class="text-gray-500 mt-1">Cadastre e gerencie as disciplinas do sistema</p>
-            </div>
-            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2 shadow-sm transition-colors">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                Nova Disciplina
+            <div><h2 class="text-2xl font-bold text-gray-900">Gerenciar Disciplinas</h2></div>
+            <button onclick="toggleModal('modal-cadastro')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2 shadow-sm">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> Nova Disciplina
             </button>
         </div>
 
@@ -56,65 +37,146 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Código</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Nome</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Curso</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Monitores</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Ações</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Código</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Nome</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Curso</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Monitores</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase">Ações</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-md">IF969</span></td>
-                        <td class="px-6 py-4 text-sm font-medium text-gray-900">Algoritmos e Estruturas de Dados</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">Ciência da Computação</td>
-                        <td class="px-6 py-4 text-sm text-gray-500 pl-8">1</td>
+                    {% for d in disciplinas %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-md">{{ d.codigo }}</span></td>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ d.nome }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ d.curso }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500 pl-8">{{ d.monitores_count }}</td>
                         <td class="px-6 py-4 text-sm font-medium flex items-center gap-3">
-                            <button class="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded-full transition-colors" title="Editar">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                </svg>
-                            </button>
-                            <button class="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded-full transition-colors" title="Excluir">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </button>
+                            <button onclick="prepararEdicao('{{ d.codigo }}', '{{ d.nome }}', '{{ d.curso }}')" class="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded-full"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+                            <button onclick="prepararDelecao('{{ d.nome }}')" class="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded-full"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
                         </td>
                     </tr>
-                    
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-md">IF977</span></td>
-                        <td class="px-6 py-4 text-sm font-medium text-gray-900">Engenharia de Software</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">Ciência da Computação</td>
-                        <td class="px-6 py-4 text-sm text-gray-500 pl-8">1</td>
-                        <td class="px-6 py-4 text-sm font-medium flex items-center gap-3">
-                            <button class="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded-full transition-colors">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                            </button>
-                            <button class="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded-full transition-colors">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            </button>
-                        </td>
-                    </tr>
-
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-md">MA026</span></td>
-                        <td class="px-6 py-4 text-sm font-medium text-gray-900">Cálculo Diferencial e Integral I</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">Matemática</td>
-                        <td class="px-6 py-4 text-sm text-gray-500 pl-8">0</td>
-                        <td class="px-6 py-4 text-sm font-medium flex items-center gap-3">
-                            <button class="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded-full transition-colors">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                            </button>
-                            <button class="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded-full transition-colors">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            </button>
-                        </td>
-                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
     </main>
+
+    <div id="modal-cadastro" class="fixed inset-0 z-50 hidden" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm" onclick="toggleModal('modal-cadastro')"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto flex items-center justify-center p-4">
+            <div class="relative bg-white rounded-lg shadow-xl w-full max-w-lg">
+                <div class="px-4 py-3 border-b border-gray-100"><h3 class="text-lg font-semibold">Nova Disciplina</h3></div>
+                
+                <form method="POST" action="{% url 'admin_disciplinas' %}" class="px-4 py-4 space-y-3">
+                    {% csrf_token %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                        <input type="text" name="nome" required class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Código (7 dígitos)</label>
+                        <input type="text" name="codigo" required maxlength="7" oninput="validar(this, 'btn-new')" class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500 text-sm">
+                    </div>
+                    
+                    <div class="flex flex-row-reverse gap-2 pt-2">
+                        <button type="submit" id="btn-new" disabled class="bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-semibold cursor-not-allowed transition-colors">Salvar</button>
+                        <button type="button" onclick="toggleModal('modal-cadastro')" class="bg-white text-gray-700 px-4 py-2 rounded-md text-sm border hover:bg-gray-50 transition-colors">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-editar" class="fixed inset-0 z-50 hidden" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm" onclick="toggleModal('modal-editar')"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto flex items-center justify-center p-4">
+            <div class="relative bg-white rounded-lg shadow-xl w-full max-w-lg">
+                <div class="px-4 py-3 border-b border-gray-100"><h3 class="text-lg font-semibold">Editar Disciplina</h3></div>
+                
+                <form method="POST" action="{% url 'admin_disciplinas' %}" class="px-4 py-4 space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="editar">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Código</label>
+                        <input type="text" id="edit-cod" name="codigo" required maxlength="7" oninput="validar(this, 'btn-edit')" class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                        <input type="text" id="edit-nom" name="nome" required class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Curso</label>
+                        <input type="text" id="edit-cur" name="curso" required class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border text-sm">
+                    </div>
+                    
+                    <div class="flex flex-row-reverse gap-2 pt-2">
+                        <button type="submit" id="btn-edit" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-blue-500 transition-colors">Salvar</button>
+                        <button type="button" onclick="toggleModal('modal-editar')" class="bg-white text-gray-700 px-4 py-2 rounded-md text-sm border hover:bg-gray-50 transition-colors">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-deletar" class="fixed inset-0 z-50 hidden" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm" onclick="toggleModal('modal-deletar')"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto flex items-center justify-center p-4">
+            <div class="relative bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
+                <div class="text-center">
+                    <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-red-100 mb-3">
+                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Excluir Disciplina</h3>
+                    <p class="mt-2 text-sm text-gray-500">Excluir <span id="del-nome" class="font-bold"></span>?</p>
+                </div>
+                <form method="POST" action="{% url 'admin_disciplinas' %}" class="mt-5 flex justify-center gap-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="deletar">
+                    <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-red-500 flex-1">Sim</button>
+                    <button type="button" onclick="toggleModal('modal-deletar')" class="bg-white text-gray-900 px-4 py-2 rounded-md text-sm border hover:bg-gray-50 flex-1">Não</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleModal(modalID) {
+            document.getElementById(modalID).classList.toggle('hidden');
+        }
+
+        function prepararEdicao(codigo, nome, curso) {
+            document.getElementById('edit-cod').value = codigo;
+            document.getElementById('edit-nom').value = nome;
+            document.getElementById('edit-cur').value = curso;
+            toggleModal('modal-editar');
+            validar(document.getElementById('edit-cod'), 'btn-edit');
+        }
+
+        function prepararDelecao(nome) {
+            document.getElementById('del-nome').innerText = nome;
+            toggleModal('modal-deletar');
+        }
+
+        function validar(input, btnId) {
+            input.value = input.value.replace(/\D/g, ''); 
+            const isValid = input.value.length === 7;
+            const btn = document.getElementById(btnId);
+
+            input.classList.toggle('border-green-500', isValid);
+            input.classList.toggle('focus:ring-green-500', isValid);
+            input.classList.toggle('border-red-500', !isValid);
+            input.classList.toggle('focus:ring-red-500', !isValid);
+
+            btn.disabled = !isValid;
+            if (isValid) {
+                btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                btn.classList.add('bg-blue-600', 'hover:bg-blue-500');
+            } else {
+                btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                btn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
+            }
+        }
+    </script>
 </body>
 </html>
