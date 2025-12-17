@@ -4,6 +4,8 @@ from django.contrib.auth import login, logout, authenticate
 from django.http import HttpResponse
 from core.services.aluno_service import AlunoService
 from django.contrib.auth.decorators import login_required
+from core.services.disciplina_service import DisciplinaService
+from core.services.aluno_service import AlunoService
 from core.repositories.usuario_repository import UsuarioRepository
 from core.exceptions.usuario_exceptions import (
     MatriculaInvalidaException, 
@@ -162,10 +164,108 @@ def dashboard(request):
     }
     return render(request, 'core/dashboard.html', context)
 
-def disciplinas(request):
-    # Retorna apenas texto, sem buscar template, para não dar erro
-    return HttpResponse("<h1>Disciplinas (Aguardando Merge da Branch de Front-end)</h1>")
-
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+@login_required(login_url='login')
+def disciplinas_view(request):
+    # O Django já nos dá o objeto do usuário logado (que é o Aluno/Usuario)
+    aluno_logado = request.user 
+
+    if request.method == 'POST':
+        codigo = request.POST.get('disciplina_codigo')
+        acao = request.POST.get('acao') # 'adicionar' ou 'remover'
+
+        try:
+            if acao == 'adicionar':
+                # Chamamos o método novo que não pede senha
+                AlunoService.adicionarInteresseWeb(aluno_logado, codigo)
+                messages.success(request, "Disciplina adicionada!")
+            elif acao == 'remover':
+                AlunoService.removerInteresseWeb(aluno_logado, codigo)
+                messages.warning(request, "Disciplina removida.")
+        except Exception as e:
+            messages.error(request, f"Erro: {str(e)}")
+        
+        return redirect('disciplinas')
+
+    # GET: Listar todas e marcar as selecionadas
+    todas = DisciplinaService.get_todas_disciplinas()
+    
+    # Cria um conjunto (set) com os códigos que o aluno JÁ segue para checagem rápida
+    meus_interesses = set(aluno_logado.interesses.values_list('codigo', flat=True))
+
+    lista_final = []
+    for d in todas:
+        lista_final.append({
+            'codigo': d.codigo,
+            'nome': d.nome,
+            'area': 'Geral', # Ajuste conforme seu model
+            'selecionada': d.codigo in meus_interesses # True/False
+        })
+
+    context = {
+        'aluno_nome': aluno_logado.first_name,
+        'disciplinas': lista_final
+    }
+    return render(request, 'core/lista_disciplina.html', context)
+
+@login_required(login_url='login')
+def perfil_view(request):
+    # Simula sucesso após POST (troca de senha)
+    sucesso = False
+    if request.method == 'POST':
+        sucesso = True # Apenas simula que salvou para mostrar a msg verde
+
+    context = {
+        'aluno': {
+            'nome_completo': request.user.get_full_name() or request.user.username,
+            'matricula': request.user.username # Assumindo que username é a matrícula
+        },
+        'sucesso': sucesso
+    }
+    return render(request, 'core/perfil.html', context)
+
+@login_required(login_url='login')
+def meus_interesses_view(request):
+    # Por enquanto o template é estático, então só renderizamos
+    return render(request, 'core/meus_interesses.html')
+
+# --- VIEWS DE ADMINISTRADOR ---
+
+@login_required(login_url='login')
+def admin_monitores_view(request):
+    # Dados Mocados de Monitores
+    mock_monitores = [
+        {'nome': 'Ana Silva', 'matricula': '12111001', 'disciplina_nome': 'Cálculo I', 'disciplina_cod': 'MAT-01'},
+        {'nome': 'Carlos Souza', 'matricula': '12111002', 'disciplina_nome': 'Programação II', 'disciplina_cod': 'COMP-02'},
+    ]
+    
+    # Tratamento simples do POST (Adicionar/Remover) só para não dar erro
+    if request.method == 'POST':
+        pass # Futuramente aqui entra a lógica de salvar/deletar
+
+    context = {
+        'admin_nome': request.user.first_name or "Administrador",
+        'monitores': mock_monitores
+    }
+    return render(request, 'core/monitores_admin.html', context)
+
+@login_required(login_url='login')
+def admin_disciplinas_view(request):
+    # Dados Mocados de Disciplinas Admin
+    mock_disciplinas = [
+        {'codigo': 'MAT-01', 'nome': 'Cálculo Diferencial e Integral I', 'curso': 'Matemática', 'monitores_count': 3},
+        {'codigo': 'COMP-02', 'nome': 'Programação II', 'curso': 'Ciência da Computação', 'monitores_count': 1},
+        {'codigo': 'FIS-03', 'nome': 'Física Moderna', 'curso': 'Física', 'monitores_count': 0},
+    ]
+
+    if request.method == 'POST':
+        pass # Futuramente lógica de CRUD
+
+    context = {
+        'admin_nome': request.user.first_name or "Administrador",
+        'disciplinas': mock_disciplinas
+    }
+    return render(request, 'core/disciplinas_admin.html', context)

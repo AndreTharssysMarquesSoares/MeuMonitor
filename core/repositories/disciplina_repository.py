@@ -25,3 +25,7 @@ class DisciplinaRepository:
     @staticmethod
     def get_disciplinaValida(codigo):
         return DisciplinaValida.objects.filter(codigo=codigo).first()
+
+    @staticmethod
+    def get_todas_disciplinas():
+        return Disciplina.objects.all().order_by('nome')
