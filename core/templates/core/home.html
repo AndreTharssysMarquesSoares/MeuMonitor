@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Home - Meu Monitor</title>
+</head>
+<body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+    
+    <h1 style="color: #2563eb;">Bem-vindo ao Sistema!</h1>
+    
+    {% if user.is_authenticated %}
+        <p>Login realizado com sucesso.</p>
+        <p><strong>Usuário:</strong> {{ user.first_name }} ({{ user.username }})</p>
+        
+        <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" style="padding: 10px 20px; cursor: pointer;">Sair</button>
+        </form>
+    {% else %}
+        <p>Você não deveria estar aqui sem logar.</p>
+        <a href="{% url 'login' %}">Ir para Login</a>
+    {% endif %}
+
+</body>
+</html>
