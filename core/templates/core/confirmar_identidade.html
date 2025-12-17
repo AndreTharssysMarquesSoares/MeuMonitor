@@ -32,21 +32,17 @@
                 </div>
 
                 <div class="space-y-3">
-                    <form method="POST" action="{% url 'concluir_cadastro' %}">
+                    <form method="POST" action="{% url 'definir_senha' %}">
                         {% csrf_token %}
+                        
                         <input type="hidden" name="matricula" value="{{ matricula }}">
                         
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                            </svg>
+                        <button type="submit" class="w-full bg-blue-600 ...">
                             Sim, sou eu
                         </button>
                     </form>
 
-                    <a href="{% url 'cadastro' %}" class="block w-full bg-white border border-gray-300 text-gray-700 font-semibold py-3.5 rounded-lg text-center hover:bg-gray-50 transition-colors">
-                        Não, essa não é minha conta
-                    </a>
+                    <a href="{% url 'cadastro' %}" class="...">Não, essa não é minha conta</a>
                 </div>
 
             </div>

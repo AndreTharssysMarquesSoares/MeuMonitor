@@ -6,9 +6,8 @@
     <title>Criar Senha - Meu Monitor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Estilos para a validação dinâmica */
-        .valid { color: #16a34a; font-weight: 600; } /* Verde escuro */
-        .invalid { color: #9ca3af; } /* Cinza */
+        .valid { color: #16a34a; font-weight: 600; }
+        .invalid { color: #9ca3af; }
         .transition-colors { transition: color 0.3s ease; }
     </style>
 </head>
@@ -31,9 +30,7 @@
             {% endif %}
 
             <form method="POST" action="{% url 'concluir_cadastro' %}" id="form-senha" class="space-y-5"> 
-                {% csrf_token %}
-
-                <input type="hidden" name="matricula" value="{{ matricula }}">
+                {% csrf_token %} <input type="hidden" name="matricula" value="{{ matricula }}">
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Email Institucional</label>
@@ -115,7 +112,6 @@
         const btnSalvar = document.getElementById('btn-salvar');
         const erroMatch = document.getElementById('erro-match');
 
-        // Mapa de requisitos e suas funções de teste (Regex)
         const requisitos = {
             'req-length': val => val.length >= 8,
             'req-upper': val => /[A-Z]/.test(val),
@@ -134,17 +130,15 @@
                 const bullet = elemento.querySelector('.bullet');
                 
                 if (teste(valor)) {
-                    // Ficou Verde
                     elemento.classList.remove('invalid');
                     elemento.classList.add('valid');
-                    icone.classList.remove('hidden'); // Mostra check
-                    bullet.classList.add('hidden');   // Esconde bolinha
+                    icone.classList.remove('hidden');
+                    bullet.classList.add('hidden');
                 } else {
-                    // Ficou Cinza
                     elemento.classList.remove('valid');
                     elemento.classList.add('invalid');
-                    icone.classList.add('hidden');    // Esconde check
-                    bullet.classList.remove('hidden');// Mostra bolinha
+                    icone.classList.add('hidden');
+                    bullet.classList.remove('hidden');
                     todosValidos = false;
                 }
             }
@@ -155,7 +149,6 @@
             const senhaValida = validarSenha();
             const senhasIguais = senhaInput.value === confirmInput.value && senhaInput.value !== '';
 
-            // Lógica visual do confirmar senha
             if (confirmInput.value.length > 0 && !senhasIguais) {
                 erroMatch.classList.remove('hidden');
                 confirmInput.classList.add('border-red-500');
@@ -164,8 +157,6 @@
                 confirmInput.classList.remove('border-red-500');
             }
 
-            // Libera o botão só se TUDO estiver ok (Senha + Confirmação)
-            // O campo de email é validado pelo navegador (required + type="email")
             if (senhaValida && senhasIguais) {
                 btnSalvar.classList.remove('opacity-50', 'cursor-not-allowed');
                 btnSalvar.removeAttribute('disabled');
