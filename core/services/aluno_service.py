@@ -121,5 +121,22 @@ class AlunoService:
     @staticmethod
     def validarAcessoAluno(matricula, senha) -> bool: 
         aluno = UsuarioRepository.get_aluno(matricula=matricula)
+        if not aluno: raise AlunoNaoCadastradoException()
         if not aluno.check_password(senha): raise SenhaIncorretaException()
         return True
+    
+    @staticmethod
+    def adicionarInteresseWeb(aluno, codigo_disciplina):
+        disciplina = DisciplinaService.get_Disciplina(codigo=codigo_disciplina)
+
+        if not aluno.interesses.filter(codigo=disciplina.codigo).exists():
+            aluno.interesses.add(disciplina)
+            aluno.save()
+
+    @staticmethod
+    def removerInteresseWeb(aluno, codigo_disciplina):
+        disciplina = DisciplinaService.get_Disciplina(codigo=codigo_disciplina)
+        
+        if aluno.interesses.filter(codigo=disciplina.codigo).exists():
+            aluno.interesses.remove(disciplina)
+            aluno.save()
