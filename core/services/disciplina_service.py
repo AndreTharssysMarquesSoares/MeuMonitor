@@ -45,3 +45,6 @@ class DisciplinaService:
         disciplina = DisciplinaService.get_Disciplina(codigo=codigo)
         return AlunoService.getMonitoresDisciplina(disciplina)
         
+    @staticmethod
+    def get_todas_disciplinas():
+        return DisciplinaRepository.get_todas_disciplinas()
