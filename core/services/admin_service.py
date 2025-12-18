@@ -56,7 +56,9 @@ class AdminService:
         if not UsuarioService.validarSenha(admin, senha_atual): raise SenhaIncorretaException()
 
         email = payload.get("email")
-        if email:
+        if email is not None:
+            if email == "":
+                raise DadosInvalidoException()
             admin.email = email
 
         nova_senha = payload.get("nova_senha")
