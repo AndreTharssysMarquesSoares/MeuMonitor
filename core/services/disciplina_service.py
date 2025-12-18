@@ -41,7 +41,6 @@ class DisciplinaService:
     @staticmethod
     def get_monitores(codigo):
         from core.services.aluno_service import AlunoService
-        
         disciplina = DisciplinaService.get_Disciplina(codigo=codigo)
         return AlunoService.getMonitoresDisciplina(disciplina)
         
