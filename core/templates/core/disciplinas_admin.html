@@ -20,13 +20,26 @@
                     <a href="{% url 'admin_monitores' %}" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Monitores</a>
                     <a href="#" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Moderação</a>
                 </nav>
-                <div class="flex items-center gap-4"><a href="{% url 'login' %}" class="text-sm font-medium text-gray-500 hover:text-red-600">Sair</a></div>
+                <div class="flex items-center gap-4"><a href="{% url 'logout' %}" class="text-sm font-medium text-gray-500 hover:text-red-600">Sair</a></div>
             </div>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+        {% if messages %}
+        <div class="mb-6 space-y-2">
+            {% for message in messages %}
+            <div class="p-4 rounded-lg flex items-center gap-3 {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-blue-50 text-blue-800{% endif %}">
+                {% if message.tags == 'success' %}
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                {% else %}
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                {% endif %}
+                <span class="text-sm font-medium">{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div><h2 class="text-2xl font-bold text-gray-900">Gerenciar Disciplinas</h2></div>
             
@@ -65,7 +78,7 @@
                         <td class="px-6 py-4 text-sm text-gray-500 pl-8">{{ d.monitores_count }}</td>
                         <td class="px-6 py-4 text-sm font-medium flex items-center gap-3">
                             <button onclick="prepararEdicao('{{ d.codigo }}', '{{ d.nome }}', '{{ d.curso }}')" class="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded-full"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
-                            <button onclick="prepararDelecao('{{ d.nome }}')" class="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded-full"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                            <button onclick="prepararDelecao('{{ d.nome }}', '{{ d.codigo }}')" class="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded-full"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -81,12 +94,87 @@
         <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm" onclick="toggleModal('modal-cadastro')"></div>
         <div class="fixed inset-0 z-10 overflow-y-auto flex items-center justify-center p-4">
             <div class="relative bg-white rounded-lg shadow-xl w-full max-w-lg">
-                <div class="px-4 py-3 border-b border-gray-100"><h3 class="text-lg font-semibold">Nova Disciplina</h3></div>
+                <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
+                    <h3 class="text-lg font-semibold">Nova Disciplina</h3>
+                    <a href="{% url 'admin_disciplinas' %}" class="text-gray-400 hover:text-gray-600">✕</a>
+                </div>
+                
                 <form method="POST" action="{% url 'admin_disciplinas' %}" class="px-4 py-4 space-y-3">
                     {% csrf_token %}
-                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Nome</label><input type="text" name="nome" required class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500 text-sm"></div>
-                    <div><label class="block text-sm font-medium text-gray-700 mb-1">Código (7 dígitos)</label><input type="text" name="codigo" required maxlength="7" oninput="validar(this, 'btn-new')" class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500 text-sm"></div>
-                    <div class="flex flex-row-reverse gap-2 pt-2"><button type="submit" id="btn-new" disabled class="bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-semibold cursor-not-allowed transition-colors">Salvar</button><button type="button" onclick="toggleModal('modal-cadastro')" class="bg-white text-gray-700 px-4 py-2 rounded-md text-sm border hover:bg-gray-50 transition-colors">Cancelar</button></div>
+                    <input type="hidden" name="acao" value="buscar">
+                    
+                    {% if erro_modal_disciplina %}
+                        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-2">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-red-700">{{ erro_modal_disciplina }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="bg-blue-50 p-3 rounded-md text-sm text-blue-800 mb-2">
+                            Digite apenas o código. O nome será buscado automaticamente.
+                        </div>
+                    {% endif %}
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Código (7 dígitos)</label>
+                        
+                        <input type="text" name="codigo" required maxlength="7" 
+                            value="{{ codigo_pesquisado }}"
+                            oninput="validar(this, 'btn-new')" 
+                            class="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 border focus:border-blue-500 focus:ring-blue-500 text-sm" 
+                            placeholder="Ex: 1411167">
+                    </div>
+                    
+                    <div class="flex flex-row-reverse gap-2 pt-2">
+                        <button type="submit" id="btn-new" disabled class="bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-semibold cursor-not-allowed transition-colors">
+                            Buscar e Salvar
+                        </button>
+                        <a href="{% url 'admin_disciplinas' %}" class="bg-white text-gray-700 px-4 py-2 rounded-md text-sm border hover:bg-gray-50 transition-colors text-center">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-confirmacao" class="fixed inset-0 z-[60] hidden" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto flex items-center justify-center p-4">
+            <div class="relative bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+                <div class="text-center">
+                    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 mb-4">
+                        <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900">Confirmar Disciplina</h3>
+                    <p class="text-sm text-gray-500 mt-2">Encontramos a seguinte disciplina:</p>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg mt-4 border border-gray-200">
+                        <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">Código: <span id="conf-cod" class="text-gray-800">{{ confirmacao.codigo }}</span></p>
+                        <p class="text-lg font-bold text-blue-700 mt-1" id="conf-nome">{{ confirmacao.nome }}</p>
+                    </div>
+                    
+                    <p class="text-sm text-gray-500 mt-4">Deseja adicionar esta disciplina ao sistema?</p>
+                </div>
+
+                <form method="POST" action="{% url 'admin_disciplinas' %}" class="mt-6 flex gap-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="acao" value="criar">
+                    <input type="hidden" name="codigo" value="{{ confirmacao.codigo }}"> 
+                    
+                    <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        Confirmar
+                    </button>
+                    <a href="{% url 'admin_disciplinas' %}" class="flex-1 bg-white text-gray-700 px-4 py-2 rounded-lg font-semibold border hover:bg-gray-50 text-center transition-colors">
+                        Cancelar
+                    </a>
                 </form>
             </div>
         </div>
@@ -118,11 +206,19 @@
                     <h3 class="text-lg font-semibold text-gray-900">Excluir Disciplina</h3>
                     <p class="mt-2 text-sm text-gray-500">Excluir <span id="del-nome" class="font-bold"></span>?</p>
                 </div>
-                <form method="POST" action="{% url 'admin_disciplinas' %}" class="mt-5 flex justify-center gap-3">
+                <form method="POST" action="{% url 'admin_disciplinas' %}" class="mt-4 space-y-3">
                     {% csrf_token %}
                     <input type="hidden" name="acao" value="deletar">
-                    <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-red-500 flex-1">Sim</button>
-                    <button type="button" onclick="toggleModal('modal-deletar')" class="bg-white text-gray-900 px-4 py-2 rounded-md text-sm border hover:bg-gray-50 flex-1">Não</button>
+                    <input type="hidden" name="codigo" id="del-codigo-input">
+                    
+                    <div class="flex justify-center gap-3 pt-2">
+                        <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-red-500 flex-1 transition-colors">
+                            Confirmar Exclusão
+                        </button>
+                        <button type="button" onclick="toggleModal('modal-deletar')" class="bg-white text-gray-900 px-4 py-2 rounded-md text-sm border hover:bg-gray-50 flex-1 transition-colors">
+                            Cancelar
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -180,8 +276,9 @@
             validar(document.getElementById('edit-cod'), 'btn-edit');
         }
 
-        function prepararDelecao(nome) {
+        function prepararDelecao(nome, codigo) {
             document.getElementById('del-nome').innerText = nome;
+            document.getElementById('del-codigo-input').value = codigo; // Input hidden novo
             toggleModal('modal-deletar');
         }
 
@@ -204,6 +301,27 @@
                 btn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
             }
         }
+
+        window.onload = function() {
+            // Controle do Modal de Confirmação (Sucesso na busca)
+            const deveMostrarConfirmacao = "{{ confirmacao|yesno:'true,false' }}";
+            if (deveMostrarConfirmacao === "true") {
+                document.getElementById('modal-confirmacao').classList.remove('hidden');
+            }
+
+            // [NOVO] Controle do Modal de Cadastro (Erro na busca)
+            const deveAbrirCadastro = "{{ mostrar_modal_cadastro|yesno:'true,false' }}";
+            if (deveAbrirCadastro === "true") {
+                // Removemos o 'hidden' manualmente, pois o toggleModal poderia inverter se já estivesse aberto
+                document.getElementById('modal-cadastro').classList.remove('hidden');
+                
+                // Forçamos a validação visual do input se já vier preenchido
+                const inputCod = document.querySelector('input[name="codigo"]');
+                if(inputCod && inputCod.value.length === 7) {
+                    validar(inputCod, 'btn-new');
+                }
+            }
+        }
     </script>
 </body>
-</html>
+</html> 

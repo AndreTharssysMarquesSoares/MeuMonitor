@@ -3,6 +3,8 @@ from core.services.usuario_service import UsuarioService
 from core.services.aluno_service import AlunoService 
 from core.services.disciplina_service import DisciplinaService
 from core.exceptions.usuario_exceptions import AlunoNaoCadastradoException, SenhaIncorretaException, SenhaFracaException, DadosInvalidoException, AdminJaCadastradoException, UserNameInvalidoException, AdminInvalidoException, UsernameAdminNaoExisteException, AlunoJaDesativadoException, MonitorJaCadastradoException, MonitorNaoCadastradoException, AlunoJaAtivadoException
+from core.exceptions.disciplina_exceptions import DisciplinaJaCadastradaException, CodigoDisciplinaInvalidoException
+from core.repositories.disciplina_repository import DisciplinaRepository
 
 class AdminService:
     
@@ -127,3 +129,63 @@ class AdminService:
     def getNaoMonitores(username, senha):
         if not AdminService.validarAcessoAdmin(username=username, senha = senha): raise AdminInvalidoException()
         return UsuarioRepository.get_nao_monitores()
+    
+    @staticmethod
+    def buscarDisciplinaValida(codigo):
+        if not DisciplinaService.exist_DisciplinaValida(codigo):
+            raise CodigoDisciplinaInvalidoException("Disciplina não encontrada na base oficial da UFCG.")
+        
+        return DisciplinaService.get_disciplinaValida(codigo)
+
+    @staticmethod
+    def criarDisciplinaWeb(codigo):
+        if DisciplinaService.exist_Disciplina(codigo): 
+            raise DisciplinaJaCadastradaException()
+            
+        disciplina_valida = DisciplinaService.get_disciplinaValida(codigo)
+        
+        return DisciplinaRepository.criar_disciplina(
+            codigo=codigo,
+            nome=disciplina_valida.nome
+        )
+
+    @staticmethod
+    def deletarDisciplinaWeb(codigo):
+        from core.models import Disciplina
+        Disciplina.objects.filter(codigo=codigo).delete()
+
+    @staticmethod
+    def criarMonitorWeb(matricula_aluno, codigo_disciplina):
+        aluno = AlunoService.getAluno(matricula=matricula_aluno)
+        disciplina = DisciplinaService.get_Disciplina(codigo=codigo_disciplina)
+        
+        if aluno.monitor_de is not None: 
+            raise MonitorJaCadastradoException()
+            
+        aluno.monitor_de = disciplina
+        UsuarioRepository.salvar(aluno)
+
+        if not aluno.interesses.filter(codigo=disciplina.codigo).exists():
+            aluno.interesses.add(disciplina)
+            
+        return aluno
+
+    @staticmethod
+    def removerMonitorWeb(matricula_aluno):
+        aluno = AlunoService.getAluno(matricula=matricula_aluno)
+        
+        if aluno.monitor_de is None: 
+            raise MonitorNaoCadastradoException()
+        
+        disciplina_alvo = aluno.monitor_de
+        aluno.monitor_de = None
+
+        if aluno.interesses.filter(id=disciplina_alvo.id).exists():
+            aluno.interesses.remove(disciplina_alvo)
+
+        UsuarioRepository.salvar(aluno)
+        return aluno
+
+    @staticmethod
+    def getTodosMonitoresWeb():
+        return UsuarioRepository.get_monitores()

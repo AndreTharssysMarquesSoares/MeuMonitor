@@ -13,6 +13,6 @@ urlpatterns = [
     path('perfil/', views.perfil_view, name='perfil'),
     path('interesses/', views.meus_interesses_view, name='meus_interesses'),
 
-    path('admin/monitores/', views.admin_monitores_view, name='admin_monitores'),
-    path('admin/disciplinas/', views.admin_disciplinas_view, name='admin_disciplinas'),
-]
+    path('gerenciar/monitores/', views.admin_monitores_view, name='admin_monitores'),
+    path('gerenciar/disciplinas/', views.admin_disciplinas_view, name='admin_disciplinas'),
+] 
