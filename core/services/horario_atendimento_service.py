@@ -4,6 +4,7 @@ from core.services.disciplina_service import DisciplinaService
 from core.repositories.horario_atendimento_repository import HorarioAtendimentoRepository
 from core.exceptions.horarios_atendimento_exceptions import HorarioInvalidoException, HorariosSobrepostosException, DiaSemanaInvalidoException, HorarioNaoExisteException, HorarioNaoPertenceAoMonitorException, DadosHorarioInvalidoException
 from core.exceptions.usuario_exceptions import AlunoNaoMonitorException, SenhaIncorretaException
+from core.exceptions.disciplina_exceptions import CodigoDisciplinaInvalidoException
 from enum import Enum
 from datetime import datetime
 
@@ -153,3 +154,9 @@ class HorarioAtendimentoService:
         if not AlunoService.isMonitor(matricula): raise AlunoNaoMonitorException() 
         horarios = HorarioAtendimentoRepository.getHorariosDoMonitor(matricula)
         return horarios
+    
+    @staticmethod
+    def getHorariosDisciplina(codigo):
+        disciplina = DisciplinaService.get_Disciplina(codigo)
+        if not disciplina: raise CodigoDisciplinaInvalidoException()
+        return HorarioAtendimentoRepository.getHorariosDaDisciplina(codigo)

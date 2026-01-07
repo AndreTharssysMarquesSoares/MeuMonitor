@@ -15,6 +15,10 @@ class HorarioAtendimentoRepository:
         return HorarioAtendimento.objects.filter(matricula=matricula)
     
     @staticmethod
+    def getHorariosDaDisciplina(codigoDisciplina):
+        return HorarioAtendimento.objects.filter(disciplina=codigoDisciplina)
+    
+    @staticmethod
     def getHorarioInicio(id):
         return HorarioAtendimento.objects.filter(id = id).first().hora_inicio
     
