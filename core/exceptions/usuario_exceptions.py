@@ -69,3 +69,7 @@ class AlunoNaoInteressadoException(Exception):
 class AlunoJaAtivadoException(Exception):
     def __init__(self, mensagem="Aluno ja ativado"):
         super().__init__(mensagem)
+        
+class AlunoNaoMonitorException(Exception):
+    def __init__(self, mensagem="Aluno não é monitor"):
+        super().__init__(mensagem)
