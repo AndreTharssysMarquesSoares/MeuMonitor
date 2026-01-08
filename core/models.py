@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 # BLOCO A: TABELAS DE VALIDAÇÃO (MOCK SIGAA)
 class AlunoValido(models.Model):
@@ -117,6 +118,32 @@ class HorarioAtendimento(models.Model):
         if monitor_disciplina != self.disciplina:
              raise ValidationError(f"O usuário {self.monitor} não é monitor da disciplina {self.disciplina}.")
 
+class Suspensao(models.Model):
+    aluno = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='suspensoes')
+    disciplina = models.ForeignKey(Disciplina, on_delete=models.CASCADE, related_name='suspensoes')
+    
+    data_inicio = models.DateField(default=timezone.now)
+    data_fim = models.DateField()
+    motivo = models.TextField()
+
+    class Meta:
+        verbose_name = "Suspensão de Aluno"
+        verbose_name_plural = "Suspensões de Alunos"
+
+    def clean(self):
+        if self.data_fim and self.data_inicio and self.data_fim < self.data_inicio:
+            raise ValidationError("A data de fim da suspensão não pode ser anterior à data de início.")
+
+        if self.aluno.tipo != 'ALUNO':
+            raise ValidationError("Apenas usuários do tipo 'Aluno' podem receber suspensões.")
+
+    def esta_ativa(self):
+        hoje = timezone.now().date()
+        return self.data_inicio <= hoje <= self.data_fim
+
+    def __str__(self):
+        return f"Suspensão: {self.aluno} em {self.disciplina} até {self.data_fim}"
+
 class MensagemForum(models.Model):
     disciplina = models.ForeignKey(Disciplina, on_delete=models.CASCADE, related_name='mensagens')
     autor = models.ForeignKey(Usuario, on_delete=models.CASCADE)
@@ -126,6 +153,28 @@ class MensagemForum(models.Model):
     data_envio = models.DateTimeField(auto_now_add=True)
     
     resposta_para = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='respostas')
+
+    def clean(self):
+        if not self.titulo and self.resposta_para is None:
+            raise ValidationError("Um tópico principal deve ter um Título. Se for uma resposta, deixe o título em branco.")
+
+        if self.resposta_para is not None and self.titulo:
+            raise ValidationError("Uma resposta não deve ter título, apenas o texto.")
+
+        if self.autor.tipo == 'ALUNO':
+            suspenso = Suspensao.objects.filter(
+                aluno=self.autor,
+                disciplina=self.disciplina,
+                data_inicio__lte=timezone.now().date(),
+                data_fim__gte=timezone.now().date()
+            ).exists()
+            
+            if suspenso:
+                raise ValidationError("Este aluno está suspenso desta disciplina e não pode postar.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         tipo = "Tópico" if self.resposta_para is None else "Resposta"
