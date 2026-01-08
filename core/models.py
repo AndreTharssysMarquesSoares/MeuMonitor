@@ -106,6 +106,8 @@ class HorarioAtendimento(models.Model):
     hora_inicio = models.TimeField()
     hora_fim = models.TimeField()
 
+    local = models.CharField(max_length=100, verbose_name="Local da Monitoria", default="A definir")
+
     class Meta:
         verbose_name = "Horário de Atendimento"
         verbose_name_plural = "Horários de Atendimento"
