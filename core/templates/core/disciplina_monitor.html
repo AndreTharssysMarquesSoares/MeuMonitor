@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel da Disciplina - Meu Monitor</title>
+    <style>
+    .overflow-y-auto::-webkit-scrollbar {
+        width: 6px !important;
+    }
+    .overflow-y-auto::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.1) !important;
+        border-radius: 10px !important;
+    }
+    .overflow-y-auto::-webkit-scrollbar-track {
+        background: transparent !important;
+    }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm">MM</div>
+                    <div>
+                        <h1 class="text-gray-900 font-bold text-lg leading-tight">Meu Monitor</h1>
+                        <p class="text-xs text-gray-500">{{ aluno_nome }}</p>
+                    </div>
+                </div>
+                <nav class="hidden md:flex space-x-8 items-center">
+                    <a href="{% url 'dashboard' %}" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Dashboard</a>
+                    <a href="{% url 'disciplinas' %}" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Disciplinas</a>
+                    <a href="{% url 'meus_interesses' %}" class="bg-blue-50 text-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">Meus interesses</a>
+                    <a href="{% url 'perfil' %}" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Meu perfil</a>
+                </nav>
+                <div class="flex items-center gap-4">
+                    <button class="relative p-2 text-gray-400 hover:text-gray-500 transition-colors">
+                        <span class="absolute top-1 right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center border-2 border-white shadow-sm">1</span>
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                    </button>
+                    <a href="{% url 'logout' %}" class="flex items-center gap-2 text-gray-500 hover:text-red-600 text-sm font-medium transition-colors"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg> Sair</a>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
+        <div class="mb-6">
+            <a href="/meus-interesses/" class="text-sm text-gray-500 hover:text-blue-600 transition-colors font-bold">&larr; Voltar para Meus Interesses</a>
+            <h2 class="text-2xl font-bold text-gray-900 mt-2">Bem vindo à página da disciplina Cálculo</h2>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-3 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center"><h3 class="font-semibold text-gray-800">Horários de Monitoria ⏰</h3></div>
+                    <div class="p-4 space-y-4 max-h-[500px] overflow-y-auto scrollbar-thin">
+                        <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                            <div class="flex items-center justify-between mb-3">
+                                <span id="cal-month" class="text-sm font-bold text-gray-700">Janeiro 2026</span>
+                                <div class="flex gap-4 text-blue-600 font-bold select-none">
+                                    <span class="cursor-pointer hover:bg-gray-200 px-2 rounded" onclick="changeMonth(-1)">‹</span>
+                                    <span class="cursor-pointer hover:bg-gray-200 px-2 rounded" onclick="changeMonth(1)">›</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 mb-3 text-[10px]"><div class="flex items-center gap-1"><span class="w-2 h-2 bg-blue-100 rounded-full border border-blue-200"></span> Monitoria</div></div>
+                            <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-gray-400 mb-1"><div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div></div>
+                            <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-gray-800">👤 Seu nome</h4>
+                                <button onclick="openModal('modal-horario')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-blue-700 transition-colors shadow-sm">Novo horário</button>
+                            </div>
+                            <div class="text-sm text-gray-600 space-y-2">
+                                <div class="flex items-center justify-between group">
+                                    <span data-day="SEG">📍 Seg: 10:00 - 12:00 (Sala CAA204)</span>
+                                    <div class="flex gap-1">
+                                        <button onclick="prepararEdicao('SEG', '10:00', '12:00', 'Sala CAA204')" class="text-blue-600 p-1 hover:bg-blue-50 rounded-full">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                        </button>
+                                        <button onclick="prepararDelecao('SEG', '10:00 - 12:00', 'Sala CAA204')" class="text-red-600 p-1 hover:bg-red-50 rounded-full">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm"><h4 class="font-bold text-gray-800 mb-2"> 👤 Monitor 2</h4><div class="text-sm text-gray-600"><span data-day="QUI">📍 Qui: 08:00 - 10:00 (Sala RE01)</span></div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px]">
+                    <div class="p-3 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <button id="btn-voltar-forum" onclick="voltarListaForum()" class="hidden text-blue-600 font-bold hover:text-blue-800 transition-colors">← Voltar</button>
+                            <h3 id="titulo-forum" class="font-semibold text-gray-800">Fórum de Dúvidas</h3>
+                        </div>
+                        <button id="btn-criar-topico" onclick="openModal('modal-topico')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Criar tópico</button>
+                    </div>
+
+                    <div id="lista-topicos" class="p-6 space-y-4 h-[500px] overflow-y-auto">
+                        <div id="card-topico-1" class="bg-white rounded-xl border border-gray-100 hover:border-blue-500 transition-all overflow-hidden">
+                            <div class="p-5">
+                                <button onclick="expandirTopico('1')" class="w-full text-left focus:outline-none group">
+                                    <h4 class="font-bold text-gray-800 mb-2 group-hover:text-blue-600">Dúvida sobre a Regra da Cadeia</h4>
+                                    <div class="flex justify-between items-start mb-1">
+                                        <span class="text-xs font-bold text-blue-600">Aluno Exemplo</span>
+                                        <span class="text-[10px] text-gray-400 font-medium">Quinta-feira, 08 de janeiro às 22:26</span>
+                                    </div>
+                                    <p id="texto-principal-1" class="text-gray-500 text-sm line-clamp-2">Estou tentando resolver o exercício 4 da lista, mas não entendi como aplicar a regra da cadeia quando temos uma função trigonométrica elevada a uma potência. Alguém pode ajudar?</p>
+                                    <div id="meta-1" class="mt-3 text-xs text-gray-400">3 respostas</div>
+                                </button>
+                            </div>
+                            
+                            <div id="detalhes-1" class="hidden px-5 pb-5 bg-white max-h-[400px] overflow-y-auto">
+                                <div class="mt-3 flex justify-end">
+                                        <button onclick="toggleAreaResposta('resp-perg-1')" class="text-gray-400 hover:text-blue-600">
+                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" stroke-width="2"/></svg>
+                                        </button>
+                                    </div>
+                                    <div id="resp-perg-1" class="hidden mt-3 flex gap-2">
+                                        <textarea placeholder="Responder..." class="flex-1 p-2 text-sm bg-gray-50 border rounded-lg outline-none resize-none"></textarea>
+                                        <button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold">Enviar</button>
+                                    </div>
+                                <div class="pt-2 relative border-t border-gray-50">
+
+                                    <div class="space-y-4 mt-4 ml-4 border-l-2 border-blue-50 pl-4">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <span class="text-xs font-bold text-blue-600">Monitor 2</span>
+                                            <span class="text-[10px] text-gray-400 font-medium">Quinta-feira, 08 de janeiro às 22:26</span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mt-1">Tente derivar primeiro a potência e depois a função trigonométrica interna.</p>
+                                        <div class="mt-2 flex justify-end">
+                                            <button onclick="toggleAreaResposta('resp-mon-1')" class="text-gray-400 hover:text-blue-600">
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" stroke-width="2"/></svg>
+                                            </button>
+                                        </div>
+                                        <div id="resp-mon-1" class="hidden mt-3 flex gap-2">
+                                            <textarea placeholder="Responder..." class="flex-1 p-2 text-sm bg-white border rounded-lg outline-none resize-none"></textarea>
+                                            <button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold">Enviar</button>
+                                        </div>
+                                        <div class="mt-4 ml-8">
+                                            <div class="flex justify-between items-start mb-1">
+                                                <span class="text-xs font-bold text-blue-600">Aluno Exemplo</span>
+                                                <span class="text-[10px] text-gray-400 font-medium">Quinta-feira, 08 de janeiro às 22:26</span>
+                                            </div>
+                                            <p class="text-sm text-gray-600 mt-1">teste</p>
+                                            <div class="mt-2 flex justify-end">
+                                                <button onclick="toggleAreaResposta('resposta-1')" class="text-gray-400 hover:text-blue-600">
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" stroke-width="2"/></svg>
+                                                </button>
+                                            </div>
+                                                <div id="resposta-1" class="hidden mt-3 flex gap-2">
+                                                    <textarea placeholder="Responder..." class="flex-1 p-2 text-sm bg-white border rounded-lg outline-none resize-none"></textarea>
+                                                    <button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold">Enviar</button>
+                                                </div>
+                                            </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="card-topico-2" class="bg-white rounded-xl border border-gray-100 hover:border-blue-500 transition-all">
+                            <button onclick="expandirTopico('2')" class="w-full text-left p-5 focus:outline-none">
+                                <h4 class="font-bold text-gray-800 mb-2">Quando sai a nota da P1?</h4>
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="text-xs font-bold text-blue-600">Aluno Exemplo</span>
+                                    <span class="text-[10px] text-gray-400 font-medium">Quinta-feira, 08 de janeiro às 22:26</span>
+                                </div>
+                                <p id="preview-2" class="text-gray-500 text-sm line-clamp-2">Alguém sabe a data?</p>
+                                <div class="mt-3 text-xs text-gray-400">0 respostas</div>
+                            </button>
+                            <div id="detalhes-2" class="hidden px-5 pb-5">
+                                <div class="flex justify-end">
+                                    <button onclick="toggleAreaResposta('resp-perg-2')" class="text-gray-400 hover:text-blue-600">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                    </button>
+                                </div>
+                                <div id="resp-perg-2" class="hidden mt-3 flex gap-2">
+                                    <textarea placeholder="Responder..." class="flex-1 p-2 text-sm bg-gray-50 border rounded-lg outline-none"></textarea>
+                                    <button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold">Enviar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-horario" class="fixed inset-0 z-[60] hidden overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-horario')"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center"><h3 class="text-lg font-bold text-gray-900">Adicionar Novo Horário</h3><button onclick="closeModal('modal-horario')" class="text-gray-400 hover:text-gray-600">✕</button></div>
+                <div id="error-alert-new" class="hidden mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-center gap-2"><span id="error-message-new"></span></div>
+                <form onsubmit="validarSalvar(event, 'new')" class="p-6 space-y-4">
+                    <div><label class="block text-sm font-semibold text-gray-700 mb-1">Dia da Semana</label><select id="dia-semana-new" class="w-full p-2.5 bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500"><option value="">Selecione...</option><option value="SEG">Segunda-feira</option><option value="TER">Terça-feira</option><option value="QUA">Quarta-feira</option><option value="QUI">Quinta-feira</option><option value="SEX">Sexta-feira</option></select></div>
+                    <div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-semibold text-gray-700 mb-1">Hora Início</label><input type="time" id="hora-inicio-new" class="w-full p-2.5 bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500"></div><div><label class="block text-sm font-semibold text-gray-700 mb-1">Hora Fim</label><input type="time" id="hora-fim-new" class="w-full p-2.5 bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500"></div></div>
+                    <div><label class="block text-sm font-semibold text-gray-700 mb-1">Local/Sala</label><input type="text" id="sala-local-new" placeholder="Ex: Sala 204" class="w-full p-2.5 bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500"></div>
+                    <div class="flex gap-3 pt-4"><button type="button" onclick="closeModal('modal-horario')" class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button><button type="submit" class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md transition-colors">Salvar</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-editar" class="fixed inset-0 z-[60] hidden overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-editar')"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center"><h3 class="text-lg font-bold text-gray-900">Editar Horário</h3><button onclick="closeModal('modal-editar')" class="text-gray-400 hover:text-gray-600">✕</button></div>
+                <div id="error-alert-edit" class="hidden mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-center gap-2"><span id="error-message-edit"></span></div>
+                <form onsubmit="validarSalvar(event, 'edit')" class="p-6 space-y-4">
+                    <div><label class="block text-sm font-semibold text-gray-700 mb-1">Dia da Semana</label><select id="dia-semana-edit" class="w-full p-2.5 bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500"><option value="SEG">Segunda-feira</option><option value="TER">Terça-feira</option><option value="QUA">Quarta-feira</option><option value="QUI">Quinta-feira</option><option value="SEX">Sexta-feira</option></select></div>
+                    <div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-semibold text-gray-700 mb-1">Hora Início</label><input type="time" id="hora-inicio-edit" class="w-full p-2.5 bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500"></div><div><label class="block text-sm font-semibold text-gray-700 mb-1">Hora Fim</label><input type="time" id="hora-fim-edit" class="w-full p-2.5 bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500"></div></div>
+                    <div><label class="block text-sm font-semibold text-gray-700 mb-1">Local/Sala</label><input type="text" id="sala-local-edit" class="w-full p-2.5 bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500"></div>
+                    <div class="flex gap-3 pt-4"><button type="button" onclick="closeModal('modal-editar')" class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button><button type="submit" class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md transition-colors">Salvar Alterações</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-topico" class="fixed inset-0 z-[60] hidden overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-topico')"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center"><h3 class="text-lg font-bold text-gray-900">Criar Novo Tópico</h3><button onclick="closeModal('modal-topico')" class="text-gray-400 hover:text-gray-600">✕</button></div>
+                <div id="error-alert-topico" class="hidden mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-center gap-2"><span id="error-message-topico"></span></div>
+                <form onsubmit="validarTopico(event)" class="p-6 space-y-4">
+                    <div>Assunto: <input type="text" id="topico-assunto" class="w-full p-2 border rounded-lg" placeholder="Assunto da dúvida"></div>
+                    <div>Explicação: <textarea id="topico-texto" rows="4" class="w-full p-2 border rounded-lg" placeholder="Explique melhor sua dúvida..."></textarea></div>
+                    <div class="flex gap-3 pt-4"><button type="button" onclick="closeModal('modal-topico')" class="flex-1 p-2 border rounded-lg">Cancelar</button><button type="submit" class="flex-1 bg-blue-600 text-white rounded-lg">Publicar</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-deletar" class="fixed inset-0 z-[60] hidden overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-deletar')"></div>
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 overflow-hidden">
+                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 mb-4 text-red-600 font-bold text-xl">!</div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Excluir Horário?</h3>
+                <p class="text-sm text-gray-500 mb-6">Confirma a exclusão na <span id="del-sala" class="font-bold text-gray-800"></span> às <span id="del-hora" class="font-bold text-gray-800"></span> na <span id="del-dia" class="font-bold text-gray-800"></span>?</p>
+                <div class="flex gap-3"><button onclick="closeModal('modal-deletar')" class="flex-1 p-2 text-sm border rounded-lg hover:bg-gray-50 transition-colors">Não</button><button onclick="closeModal('modal-deletar')" class="flex-1 p-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-md transition-colors">Sim, excluir</button></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dataAtual = new Date(2026, 0, 1);
+        const $ = id => document.getElementById(id);
+
+        // apenas uma caixa de resposta aberta por vez
+        function toggleAreaResposta(id) {
+            document.querySelectorAll('[id^="resp-"]').forEach(a => { if(a.id !== id) a.classList.add('hidden') });
+            $(id).classList.toggle('hidden');
+            if (!$(id).classList.contains('hidden')) $(id).querySelector('textarea').focus();
+        }
+
+        function expandirTopico(id) {
+            $('btn-criar-topico').classList.add('hidden');
+            document.querySelectorAll('#lista-topicos > div').forEach(c => c.id !== `card-topico-${id}` ? c.classList.add('hidden') : null);
+            $('btn-voltar-forum').classList.remove('hidden');
+            $(`detalhes-${id}`).classList.remove('hidden');
+        }
+
+        function voltarListaForum() {
+            $('btn-criar-topico').classList.remove('hidden');
+            $('btn-voltar-forum').classList.add('hidden');
+            document.querySelectorAll('#lista-topicos > div').forEach(c => {
+                c.classList.remove('hidden');
+                const d = c.querySelector('[id^="detalhes-"]');
+                if(d) d.classList.add('hidden');
+                c.querySelectorAll('[id^="resp-"]').forEach(r => r.classList.add('hidden'));
+            });
+        }
+
+        // função do calendário - identifica os dias com monitoria através de 'data-day'
+        function drawCal() {
+            const grade = $('calendar-grid'), ativos = Array.from(document.querySelectorAll('[data-day]')).map(e => ({SEG:1,TER:2,QUA:3,QUI:4,SEX:5}[e.dataset.day]));
+            grade.innerHTML = '';
+            let nome = dataAtual.toLocaleString('pt-br', { month: 'long', year: 'numeric' });
+            $('cal-month').innerText = nome.charAt(0).toUpperCase() + nome.slice(1);
+            const inicio = new Date(dataAtual.getFullYear(), dataAtual.getMonth(), 1).getDay();
+            const fim = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 0).getDate();
+            for (let i = 0; i < inicio; i++) grade.innerHTML += '<div></div>';
+            for (let d = 1; d <= fim; d++) {
+                const mon = ativos.includes(new Date(dataAtual.getFullYear(), dataAtual.getMonth(), d).getDay());
+                grade.innerHTML += `<div class="p-1 ${mon ? 'bg-blue-100 text-blue-600 rounded-full font-bold' : 'text-gray-700'}">${d}</div>`;
+            }
+        }
+
+        //navegação pelos meses do calendario
+        const changeMonth = p => { dataAtual.setMonth(dataAtual.getMonth() + p); drawCal(); }
+        const openModal = id => { 
+            $(id).classList.remove('hidden'); 
+            document.body.style.overflow = 'hidden'; 
+            document.querySelector('main').style.filter = 'blur(4px)'; // aplica o blur 
+        }
+
+        const closeModal = () => { 
+            document.querySelectorAll('.fixed').forEach(m => m.classList.add('hidden')); 
+            document.body.style.overflow = 'auto'; 
+            document.querySelector('main').style.filter = 'none'; // remove o blur 
+        }
+        
+        //para salvar e editar 
+        function validarSalvar(event, p) {
+            event.preventDefault();
+            const v = id => $(`${id}-${p}`).value, b = $(`error-alert-${p}`), m = $(`error-message-${p}`);
+            if (!v('dia-semana') || !v('hora-inicio') || !v('hora-fim') || !v('sala-local').trim()) { m.innerText="Campos vazios."; b.classList.remove('hidden'); return; }
+            if (v('hora-fim') <= v('hora-inicio')) { m.innerText="Hora final inválida."; b.classList.remove('hidden'); return; }
+            closeModal();
+        }
+
+        function validarTopico(e) {
+            e.preventDefault();
+            if (!$('topico-assunto').value.trim() || !$('topico-texto').value.trim()) { $('error-alert-topico').classList.remove('hidden'); $('error-message-topico').innerText="Preencha tudo."; return; }
+            closeModal();
+        }
+
+        function prepararEdicao(d, i, f, s) { 
+            $('dia-semana-edit').value = d; $('hora-inicio-edit').value = i; 
+            $('hora-fim-edit').value = f; $('sala-local-edit').value = s; openModal('modal-editar'); 
+        }
+
+        function prepararDelecao(d, h, s) { $('del-dia').innerText = d; $('del-hora').innerText = h; $('del-sala').innerText = s; openModal('modal-deletar'); }
+
+        drawCal();
+    </script>
+</body>
+</html>
