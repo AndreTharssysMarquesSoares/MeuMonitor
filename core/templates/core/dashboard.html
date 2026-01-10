@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -35,10 +36,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm">MM</div>
+                    <img src="{% static 'core/img/MeuMonitor.png' %}" alt="Logo Meu Monitor" class="h-10 w-auto object-contain">
                     <div>
-                        <h1 class="text-gray-900 font-bold text-lg leading-tight">Meu Monitor</h1>
-                        <p class="text-xs text-gray-500">{{ aluno_nome }}</p>
+                        <p class="text-xs text-gray-500 font-medium leading-none mt-1">{{ aluno_nome }}</p>
                     </div>
                 </div>
                 
@@ -47,9 +47,7 @@
                     
                     <a href="{% url 'disciplinas' %}" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Disciplinas</a>
                     
-                    <a href="{% url 'meus_interesses' %}"" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Meus interesses</a>
-                    
-                    <a href="#" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Meus fóruns</a>
+                    <a href="{% url 'meus_interesses' %}" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Meus interesses</a>
 
                     <a href="{% url 'perfil' %}" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Meu perfil</a>
                 </nav>
@@ -123,7 +121,6 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div class="p-6 border-b border-gray-50 flex justify-between items-center">
                     <h3 class="font-semibold text-gray-800">Próximos Horários</h3>
-                    <a href="#" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Ver todos</a>
                 </div>
                 <div class="p-6 space-y-4">
                     {% for horario in horarios %}
@@ -147,7 +144,6 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div class="p-6 border-b border-gray-50 flex justify-between items-center">
                     <h3 class="font-semibold text-gray-800">Atividade do Fórum</h3>
-                    <a href="#" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Ver todos</a>
                 </div>
                 <div class="p-6 space-y-4">
                     {% for topico in topicos %}
@@ -167,9 +163,7 @@
                     {% endfor %}
                 </div>
             </div>
-
         </div>
-
     </main>
 </body>
 </html>

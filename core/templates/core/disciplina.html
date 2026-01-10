@@ -84,20 +84,11 @@
 
                         <div class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
                             <div class="flex justify-between items-center mb-4">
-                                <h4 class="font-bold text-gray-800">👤 Seu nome</h4>
-                                <button onclick="openModal('modal-horario')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-blue-700 transition-colors shadow-sm">Novo horário</button>
+                                <h4 class="font-bold text-gray-800">👤 Monitor 1</h4>
                             </div>
                             <div class="text-sm text-gray-600 space-y-2">
                                 <div class="flex items-center justify-between group">
                                     <span data-day="SEG">📍 Seg: 10:00 - 12:00 (Sala CAA204)</span>
-                                    <div class="flex gap-1">
-                                        <button onclick="prepararEdicao('SEG', '10:00', '12:00', 'Sala CAA204')" class="text-blue-600 p-1 hover:bg-blue-50 rounded-full">
-                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                        </button>
-                                        <button onclick="prepararDelecao('SEG', '10:00 - 12:00', 'Sala CAA204')" class="text-red-600 p-1 hover:bg-red-50 rounded-full">
-                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -322,28 +313,12 @@
             document.body.style.overflow = 'auto'; 
             document.querySelector('main').style.filter = 'none'; // remove o blur 
         }
-        
-        //para salvar e editar 
-        function validarSalvar(event, p) {
-            event.preventDefault();
-            const v = id => $(`${id}-${p}`).value, b = $(`error-alert-${p}`), m = $(`error-message-${p}`);
-            if (!v('dia-semana') || !v('hora-inicio') || !v('hora-fim') || !v('sala-local').trim()) { m.innerText="Campos vazios."; b.classList.remove('hidden'); return; }
-            if (v('hora-fim') <= v('hora-inicio')) { m.innerText="Hora final inválida."; b.classList.remove('hidden'); return; }
-            closeModal();
-        }
 
         function validarTopico(e) {
             e.preventDefault();
             if (!$('topico-assunto').value.trim() || !$('topico-texto').value.trim()) { $('error-alert-topico').classList.remove('hidden'); $('error-message-topico').innerText="Preencha tudo."; return; }
             closeModal();
         }
-
-        function prepararEdicao(d, i, f, s) { 
-            $('dia-semana-edit').value = d; $('hora-inicio-edit').value = i; 
-            $('hora-fim-edit').value = f; $('sala-local-edit').value = s; openModal('modal-editar'); 
-        }
-
-        function prepararDelecao(d, h, s) { $('del-dia').innerText = d; $('del-hora').innerText = h; $('del-sala').innerText = s; openModal('modal-deletar'); }
 
         drawCal();
     </script>
