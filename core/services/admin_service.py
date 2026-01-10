@@ -71,6 +71,12 @@ class AdminService:
         return admin
 
     @staticmethod
+    def getAdmin(username):
+        admin = UsuarioRepository.get_admin(username)
+        if not admin: raise AdminInvalidoException()
+        return admin
+    
+    @staticmethod
     def validarAcessoAdmin(username, senha) -> bool: 
         admin = UsuarioRepository.get_admin(username=username)
         if not admin: raise UsernameAdminNaoExisteException()
