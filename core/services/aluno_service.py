@@ -140,3 +140,8 @@ class AlunoService:
         if aluno.interesses.filter(codigo=disciplina.codigo).exists():
             aluno.interesses.remove(disciplina)
             aluno.save()
+            
+    @staticmethod
+    def isMonitor(matricula):
+        aluno = AlunoService.getAluno(matricula)
+        return not (aluno.monitor_de is None)

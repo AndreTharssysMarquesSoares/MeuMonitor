@@ -22,3 +22,7 @@ class HorarioNaoPertenceAoMonitorException(Exception):
 class DadosHorarioInvalidoException(Exception):
     def __init__(self, mensagem = "Dados do Horário novo inválidos"):
         super().__init__(mensagem)
+        
+class SalaOcupadaException(Exception):
+    def __init__(self, mensagem = "Sala está ocupada nesse horário"):
+        super().__init__(mensagem)
