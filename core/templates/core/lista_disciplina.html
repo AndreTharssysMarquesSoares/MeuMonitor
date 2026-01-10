@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -12,10 +13,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">MM</div>
+                    <img src="{% static 'core/img/MeuMonitor.png' %}" alt="Logo Meu Monitor" class="h-10 w-auto object-contain">
                     <div>
-                        <h1 class="text-gray-900 font-bold text-lg leading-tight">Meu Monitor</h1>
-                        <p class="text-xs text-gray-500">{{ aluno_nome }}</p>
+                        <p class="text-xs text-gray-500 font-medium leading-none mt-1">{{ aluno_nome }}</p>
                     </div>
                 </div>
                 
@@ -25,8 +25,6 @@
                     <a href="{% url 'disciplinas' %}" class="bg-blue-50 text-blue-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">Disciplinas</a>
                     
                     <a href="{% url 'meus_interesses' %}" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Meus interesses</a>
-                    
-                    <a href="#" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Meus fóruns</a>
 
                     <a href="{% url 'perfil' %}" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Meu perfil</a>
                 </nav>
@@ -53,7 +51,7 @@
     <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         <div class="mb-8">
-            <h2 class="text-2xl font-bold text-gray-900">Minhas Disciplinas</h2>
+            <h2 class="text-2xl font-bold text-gray-900">Disciplinas Disponíveis</h2>
             <p class="text-gray-500 mt-1">Selecione as disciplinas que você está cursando para ver monitorias disponíveis.</p>
         </div>
 
@@ -66,7 +64,7 @@
                 id="campo-busca"
                 onkeyup="filtrarDisciplinas()"
                 class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                placeholder="Buscar por nome, código ou curso..."
+                placeholder="Buscar por nome ou código..."
             >
         </div>
 

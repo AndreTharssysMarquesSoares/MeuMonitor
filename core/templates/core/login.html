@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -7,13 +8,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-
     <div class="w-full max-w-md">
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-auto px-6 py-3 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl mb-4 shadow-lg">
-                <span class="text-white text-xl font-bold tracking-wide">Meu Monitor</span>
+            <div class="inline-flex items-center justify-center mb-2">
+                <img src="{% static 'core/img/MeuMonitorNomeEsq.png' %}" alt="Logo Meu Monitor" 
+                    class="h-24 w-auto object-contain transition-transform hover:scale-105 duration-300">
             </div>
-            <p class="text-gray-600">Sistema de Monitoria Acadêmica para a UFCG</p>
+            <p class="text-gray-500 font-medium text-sm">Sistema de Monitoria Acadêmica para a UFCG</p>
         </div>
 
         <div class="bg-white rounded-2xl shadow-xl p-8">
