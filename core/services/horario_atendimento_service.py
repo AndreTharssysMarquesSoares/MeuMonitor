@@ -16,196 +16,200 @@ class DiaSemana(Enum):
     SEX = 5
     SAB = 6
     DOM = 7
-    
+
 class HorarioAtendimentoService: 
     
     @staticmethod
-    def verificarHorariosSobrepostos(novoHorarioInicio, novoHorarioFim, matricula):
-        horariosDoMonitor =  HorarioAtendimentoService.getHorariosDoMonitor(matricula)
+    def verificarHorariosSobrepostos(novoHorarioInicio, novoHorarioFim, matricula, diaSemana):
+        horariosDoMonitor = HorarioAtendimentoService.getHorariosMonitor(matricula)
         existeHorarioSobreposto = False
         
         for h in horariosDoMonitor:
-            horarioInicioExistente = HorarioAtendimentoRepository.getHoraInicio(h.id)
-            horarioFimExistente = HorarioAtendimentoRepository.getHoraFim(h.id)
+            # Só verifica sobreposição se for no mesmo dia da semana
+            if h.dia_semana != diaSemana:
+                continue
+    
+            horarioInicioExistente = h.hora_inicio
+            horarioFimExistente = h.hora_fim
             
             existeHorarioSobreposto = novoHorarioInicio < horarioFimExistente and novoHorarioFim > horarioInicioExistente
             
-            if existeHorarioSobreposto: break
+            if existeHorarioSobreposto: 
+                break
             
         return existeHorarioSobreposto
     
-    def verificarSalaOcupada(novoHorarioInicio, novoHorarioFim, local):
+    @staticmethod
+    def verificarSalaOcupada(novoHorarioInicio, novoHorarioFim, local, diaSemana, horarioIdExcluir=None):
         horariosDaSala = HorarioAtendimentoRepository.getHorariosDaSala(local)
         salaOcupada = False
         
         for h in horariosDaSala:
-            
-            horarioInicioExistente = HorarioAtendimentoRepository.getHoraInicio(h.id)
-            horarioFimExistente = HorarioAtendimentoRepository.getHoraFim(h.id)
+            if horarioIdExcluir and h.id == int(horarioIdExcluir):
+                continue
+        
+            if h.dia_semana != diaSemana:
+                continue
+                
+            horarioInicioExistente = h.hora_inicio
+            horarioFimExistente = h.hora_fim
             
             salaOcupada = novoHorarioInicio < horarioFimExistente and novoHorarioFim > horarioInicioExistente
             
-            if salaOcupada: break
+            if salaOcupada: 
+                break
             
         return salaOcupada
-    
     
     @staticmethod
     def cadastrarHorario(matricula, diaSemana, horarioInicio, horarioFim, local):
         
         monitor = AlunoService.getAluno(matricula=matricula)
         
-        # Verifica se o aluno é monitor
-        if not AlunoService.isMonitor(matricula): raise AlunoNaoMonitorException()
+        if not AlunoService.isMonitor(matricula): 
+            raise AlunoNaoMonitorException()
         
         horarioInicio = datetime.strptime(horarioInicio, "%H:%M").time()
         horarioFim = datetime.strptime(horarioFim, "%H:%M").time()
 
-        # Verifica se os horarios nao estao "Trocados"
-        if horarioFim <= horarioInicio: raise HorarioInvalidoException()
+        if horarioFim <= horarioInicio: 
+            raise HorarioInvalidoException()
         
-        # Verifica Se há horarios sobrepostos
-        if HorarioAtendimentoService.verificarHorariosSobrepostos(horarioInicio, horarioFim, matricula): raise HorariosSobrepostosException()
-            
-        # Verifica se o dia da semana selecionado esta entre segunda e sexta
+        if HorarioAtendimentoService.verificarHorariosSobrepostos(horarioInicio, horarioFim, matricula, diaSemana): 
+            raise HorariosSobrepostosException()
+        
         try:
-            dia_enum = DiaSemana(diaSemana)
-        except ValueError:
+            dia_enum = DiaSemana[diaSemana]
+        except KeyError:
             raise DiaSemanaInvalidoException()
 
-        if dia_enum.value > 5:
+        if dia_enum.value > 6:
             raise DiaSemanaInvalidoException()
         
-        local = local.replace(" ", "").replace("-", "")
+        local_normalizado = local.strip()
+     
+        if HorarioAtendimentoService.verificarSalaOcupada(horarioInicio, horarioFim, local_normalizado, diaSemana): 
+            raise SalaOcupadaException()
         
-        if HorarioAtendimentoService.verificarSalaOcupada(horarioInicio, horarioFim, local): raise SalaOcupadaException()
-        
-        disciplina_codigo = monitor.monitor_de
+        disciplina = monitor.monitor_de
         
         horario = HorarioAtendimentoRepository.criar_Horario(
-            dia_semana = dia_enum,
-            hora_inicio = horarioInicio,
-            hora_fim = horarioFim,
-            disciplina_id = disciplina_codigo,
-            monitor_id = monitor.matricula,
-            local = local
+            dia_semana=diaSemana,
+            hora_inicio=horarioInicio,
+            hora_fim=horarioFim,
+            disciplina=disciplina,
+            monitor=monitor,
+            local=local_normalizado
         )
         
         return horario
-        
+    
     @staticmethod
     def removerHorario(matriculaMonitor, senhaMonitor, idHorario):
+
+        if not AlunoService.isMonitor(matriculaMonitor): 
+            raise AlunoNaoMonitorException() 
+
+        if not UsuarioService.validarSenha(matriculaMonitor, senhaMonitor): 
+            raise SenhaIncorretaException()
         
-        # Verifica se o aluno é monitor
-        if not AlunoService.isMonitor(matriculaMonitor): raise AlunoNaoMonitorException() 
-        
-        # Verifica acesso do monitor
-        if not UsuarioService.validarSenha(matriculaMonitor, senhaMonitor): raise SenhaIncorretaException()
-        
-        # Verifica se o horario é do monitor
-        if HorarioAtendimentoRepository.getMonitor(idHorario) != matriculaMonitor: raise HorarioNaoPertenceAoMonitorException()
+        horario = HorarioAtendimentoRepository.getHorario(idHorario)
+        if not horario:
+            raise HorarioNaoExisteException()
+
+        if horario.monitor.username != matriculaMonitor: 
+            raise HorarioNaoPertenceAoMonitorException()
         
         HorarioAtendimentoRepository.removeHorario(idHorario)
         
         return True
-        
+    
     @staticmethod
-    def alterarHorario(matriculaMonitor, senhaMonitor, idHorario, **payload):
+    def removerHorarioWeb(idHorario, matriculaMonitor):
+        """Versão simplificada para uso na web (usuário já autenticado)"""
+        horario = HorarioAtendimentoRepository.getHorario(idHorario)
+        if not horario:
+            raise HorarioNaoExisteException()
+
+        if horario.monitor.username != matriculaMonitor: 
+            raise HorarioNaoPertenceAoMonitorException()
         
-        """
-        payload opcional:
-        - dia_semana
-        - horario_inicio
-        - horario_fim
-        - local
-        """
+        HorarioAtendimentoRepository.removeHorario(idHorario)
+        return True
+
+    @staticmethod
+    def editarHorarioWeb(idHorario, matriculaMonitor, diaSemana, horarioInicio, horarioFim, local):
+        """Versão simplificada para edição na web (usuário já autenticado)"""
         
-        # Verifica se o aluno é monitor
-        if not AlunoService.isMonitor(matriculaMonitor): raise AlunoNaoMonitorException() 
+        horario = HorarioAtendimentoRepository.getHorario(idHorario)
+        if not horario:
+            raise HorarioNaoExisteException()
+
+        if horario.monitor.username != matriculaMonitor: 
+            raise HorarioNaoPertenceAoMonitorException()
+
+        horarioInicio = datetime.strptime(horarioInicio, "%H:%M").time()
+        horarioFim = datetime.strptime(horarioFim, "%H:%M").time()
+
+        if horarioFim <= horarioInicio: 
+            raise HorarioInvalidoException()
+
+        try:
+            dia_enum = DiaSemana[diaSemana]
+        except KeyError:
+            raise DiaSemanaInvalidoException()
+
+        if dia_enum.value > 6:
+            raise DiaSemanaInvalidoException()
         
-        # Verifica o acesso do monitor
-        if not UsuarioService.validarSenha(matriculaMonitor, senhaMonitor): raise SenhaIncorretaException()
-        
-        horario = HorarioAtendimentoService.getHorario(idHorario)
-        
-        # verifica se o horario é do monitor
-        if HorarioAtendimentoRepository.getMonitor(idHorario) != matriculaMonitor: raise HorarioNaoPertenceAoMonitorException()
-        
-        dia_semana = payload.get("dia_semana") 
-        if dia_semana is not None:
-            if dia_semana == "":
-                raise DadosHorarioInvalidoException()
-            
-            try:
-                dia_enum = DiaSemana(dia_semana)
-            except ValueError:
-                raise DiaSemanaInvalidoException()
-            
-            if dia_enum.value > 5: raise DiaSemanaInvalidoException()
-            horario.dia_semana = dia_enum
-            
-        horario_inicio = payload.get("horario_inicio") 
-        if horario_inicio is not None:
-            if horario_inicio == "":
-                raise DadosHorarioInvalidoException()
-            else:
-                horario_inicio = datetime.strptime(horario_inicio, "%H:%M").time()
-        else:
-            horario_inicio = HorarioAtendimentoRepository.getHoraInicio(idHorario)
-        
-        horario_fim = payload.get("horario_fim") 
-        if horario_fim is not None:
-            if horario_fim == "":
-                raise DadosHorarioInvalidoException()
-            else:
-                horario_fim = datetime.strptime(horario_fim, "%H:%M").time()
-        else:
-            horario_fim = HorarioAtendimentoRepository.getHoraFim(idHorario)
-        
-        # Verifica se os horarios nao estao "Trocados"
-        if horario_fim <= horario_inicio: raise HorarioInvalidoException()
-        
-        # Verifica Se há horarios sobrepostos
-        if HorarioAtendimentoService.verificarHorariosSobrepostos(horario_inicio, horario_fim, matriculaMonitor): raise HorariosSobrepostosException()
-        
-        horario.hora_inicio = horario_inicio
-        horario.hora_fim = horario_fim
-        
-        local = payload.get("local") 
-        if local is not None:
-            if local == "":
-                raise DadosHorarioInvalidoException()
-            else:
-                local = local.replace(" ", "").replace("-", "")
-            
-            if HorarioAtendimentoService.verificarSalaOcupada(horario_inicio, horario_fim, local): raise SalaOcupadaException()
-            
-            horario.local = local
+        local_normalizado = local.strip()
+
+        horariosDoMonitor = HorarioAtendimentoService.getHorariosMonitor(matriculaMonitor)
+        for h in horariosDoMonitor:
+            if h.id == int(idHorario):
+                continue  # Ignora o próprio horário
+            if h.dia_semana != diaSemana:
+                continue  # Só verifica no mesmo dia
+            if horarioInicio < h.hora_fim and horarioFim > h.hora_inicio:
+                raise HorariosSobrepostosException()
+
+        if HorarioAtendimentoService.verificarSalaOcupada(horarioInicio, horarioFim, local_normalizado, diaSemana, idHorario): 
+            raise SalaOcupadaException()
+
+        horario.dia_semana = diaSemana
+        horario.hora_inicio = horarioInicio
+        horario.hora_fim = horarioFim
+        horario.local = local_normalizado
         
         HorarioAtendimentoRepository.salvar(horario)
         
         return horario
-              
+    
     @staticmethod
     def getHorariosMonitor(matricula):
-        if not AlunoService.isMonitor(matricula): raise AlunoNaoMonitorException() 
-        horarios = HorarioAtendimentoRepository.getHorariosDoMonitor(matricula)
-        return horarios
+        """Retorna os horários de um monitor específico"""
+        from core.models import HorarioAtendimento
+        return HorarioAtendimento.objects.filter(monitor__username=matricula)
     
     @staticmethod
     def getHorariosDisciplina(codigo):
-        disciplina = DisciplinaService.get_Disciplina(codigo)
-        if not disciplina: raise CodigoDisciplinaInvalidoException()
-        return HorarioAtendimentoRepository.getHorariosDaDisciplina(codigo)
+        """Retorna os horários de uma disciplina"""
+        from core.models import HorarioAtendimento, Disciplina
+        disciplina = Disciplina.objects.filter(codigo=codigo).first()
+        if not disciplina: 
+            raise CodigoDisciplinaInvalidoException()
+        return HorarioAtendimento.objects.filter(disciplina=disciplina)
     
     @staticmethod
     def getHorariosLocal(local):
         horarios = HorarioAtendimentoRepository.getHorariosDaSala(local)
-        if not horarios: raise HorarioNaoExisteException()
+        if not horarios: 
+            raise HorarioNaoExisteException()
         return horarios
     
     @staticmethod
     def getHorario(id):
         horario = HorarioAtendimentoRepository.getHorario(id)
-        if not horario: raise HorarioNaoExisteException()
+        if not horario: 
+            raise HorarioNaoExisteException()
         return horario

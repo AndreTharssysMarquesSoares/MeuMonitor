@@ -5,6 +5,7 @@ from core.services.disciplina_service import DisciplinaService
 from core.exceptions.usuario_exceptions import AlunoNaoCadastradoException, SenhaIncorretaException, SenhaFracaException, DadosInvalidoException, AdminJaCadastradoException, UserNameInvalidoException, AdminInvalidoException, UsernameAdminNaoExisteException, AlunoJaDesativadoException, MonitorJaCadastradoException, MonitorNaoCadastradoException, AlunoJaAtivadoException
 from core.exceptions.disciplina_exceptions import DisciplinaJaCadastradaException, CodigoDisciplinaInvalidoException
 from core.repositories.disciplina_repository import DisciplinaRepository
+from core.models import HorarioAtendimento
 
 class AdminService:
     
@@ -186,6 +187,7 @@ class AdminService:
             raise MonitorNaoCadastradoException()
         
         disciplina_alvo = aluno.monitor_de
+        HorarioAtendimento.objects.filter(monitor=aluno).delete()
         aluno.monitor_de = None
 
         if aluno.interesses.filter(id=disciplina_alvo.id).exists():

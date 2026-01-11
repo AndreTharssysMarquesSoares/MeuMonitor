@@ -29,13 +29,6 @@
                 </nav>
 
                 <div class="flex items-center gap-4">
-                    <button class="relative p-2 text-gray-400 hover:text-gray-500 transition-colors">
-                        <span class="absolute top-1 right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center border-2 border-white shadow-sm">1</span>
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                    </button>
-
                     <a href="{% url 'logout' %}" class="flex items-center gap-2 text-gray-500 hover:text-red-600 text-sm font-medium transition-colors">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -61,7 +54,20 @@
                     <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                 </div>
                 <div class="ml-3">
-                    <p class="text-sm text-green-700 font-medium">Senha alterada com sucesso!</p>
+                    <p class="text-sm text-green-700 font-medium">{{ sucesso }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if erro %}
+        <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-red-700 font-medium">{{ erro }}</p>
                 </div>
             </div>
         </div>
@@ -93,11 +99,24 @@
                 <hr class="border-gray-200">
 
                 <div>
-                    <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Segurança</h3>
+                    <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Informações de Contato</h3>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
+                        <input type="email" name="email" id="email" value="{{ aluno.email }}"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                            placeholder="seu.email@exemplo.com">
+                        <p class="mt-1 text-xs text-gray-400">Usado para recuperação de senha e notificações.</p>
+                    </div>
+                </div>
+
+                <hr class="border-gray-200">
+
+                <div>
+                    <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Alterar Senha</h3>
                     
                     <div class="space-y-4">
                         <div>
-                            <label for="senha_antiga" class="block text-sm font-medium text-gray-700">Senha Atual</label>
+                            <label for="senha_antiga" class="block text-sm font-medium text-gray-700">Senha Atual <span class="text-red-500">*</span></label>
                             <input type="password" name="senha_antiga" id="senha_antiga" required
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
                                 placeholder="Digite sua senha atual para confirmar">
@@ -105,13 +124,13 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label for="nova_senha" class="block text-sm font-medium text-gray-700">Nova Senha</label>
+                                <label for="nova_senha" class="block text-sm font-medium text-gray-700">Nova Senha <span class="text-red-500">*</span></label>
                                 <input type="password" name="nova_senha" id="nova_senha" required onkeyup="validarSenha()"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border">
                             </div>
 
                             <div>
-                                <label for="confirmar_senha" class="block text-sm font-medium text-gray-700">Confirmar Nova Senha</label>
+                                <label for="confirmar_senha" class="block text-sm font-medium text-gray-700">Confirmar Nova Senha <span class="text-red-500">*</span></label>
                                 <input type="password" name="confirmar_senha" id="confirmar_senha" required onkeyup="validarSenha()"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border">
                             </div>
@@ -159,23 +178,20 @@
             const confirmacao = document.getElementById('confirmar_senha').value;
             const btn = document.getElementById('btn-salvar');
 
-            // Regras (Regex)
             const temTamanho = senha.length >= 8;
             const temMaiuscula = /[A-Z]/.test(senha);
-            const temMinuscula = /[a-z]/.test(senha); // NOVA REGRA
+            const temMinuscula = /[a-z]/.test(senha);
             const temNumero = /[0-9]/.test(senha);
             const temEspecial = /[!@#$%^&*(),.?":{}|<>]/.test(senha);
             const senhasIguais = senha === confirmacao && senha.length > 0;
 
-            // Atualiza visual do checklist
             atualizarItem('req-tamanho', temTamanho);
             atualizarItem('req-maiuscula', temMaiuscula);
-            atualizarItem('req-minuscula', temMinuscula); // ATUALIZA O VISUAL
+            atualizarItem('req-minuscula', temMinuscula);
             atualizarItem('req-numero', temNumero);
             atualizarItem('req-especial', temEspecial);
             atualizarItem('req-igual', senhasIguais);
 
-            // Libera ou Bloqueia botão (Adicionei temMinuscula aqui também)
             if (temTamanho && temMaiuscula && temMinuscula && temNumero && temEspecial && senhasIguais) {
                 btn.disabled = false;
                 btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
