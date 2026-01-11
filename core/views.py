@@ -1,5 +1,3 @@
-from multiprocessing import context
-from urllib import request
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
@@ -29,6 +27,7 @@ from core.exceptions.mensagem_exceptions import TopicosAindaNaoCadastradosExcept
 from core.exceptions.horarios_atendimento_exceptions import HorarioNaoExisteException
     
 
+
 def cadastro_view(request):
     if request.method == 'POST':
         matricula = request.POST.get('matricula')
@@ -49,12 +48,14 @@ def cadastro_view(request):
 
     return render(request, 'core/cadastro.html')
 
+
 def definir_senha_view(request):
     if request.method == 'POST':
         matricula = request.POST.get('matricula')
         return render(request, 'core/definir_senha.html', {'matricula': matricula})
 
     return redirect('cadastro')
+
 
 def concluir_cadastro_view(request):
     if request.method == 'POST':
@@ -79,8 +80,6 @@ def concluir_cadastro_view(request):
             
     return redirect('cadastro')
 
-def home(request):
-    return HttpResponse("<h1>Página Inicial (Aguardando Merge da Branch de Front-end)</h1>")
 
 def login_view(request):
 
@@ -144,9 +143,11 @@ def login_view(request):
 
     return render(request, 'core/login.html')
 
+
 def logout_view(request):
     logout(request)
     return redirect('login')
+
 
 @login_required(login_url='login') 
 def dashboard(request): 
@@ -205,24 +206,58 @@ def dashboard(request):
     }
     return render(request, 'core/dashboard.html', context)
 
+
 @login_required(login_url='login')
 def perfil_view(request):
-    sucesso = False
+    aluno = request.user
+    erro = None
+    sucesso = None
+    
     if request.method == 'POST':
-        sucesso = True
+        senha_atual = request.POST.get('senha_antiga')
+        nova_senha = request.POST.get('nova_senha')
+        confirmar_senha = request.POST.get('confirmar_senha')
+        novo_email = request.POST.get('email')
+        
+        # Verificar se a senha atual está correta
+        if not aluno.check_password(senha_atual):
+            erro = "Senha atual incorreta."
+        elif nova_senha != confirmar_senha:
+            erro = "As senhas não coincidem."
+        elif len(nova_senha) < 8:
+            erro = "A nova senha deve ter no mínimo 8 caracteres."
+        else:
+            try:
+                # Atualizar senha
+                aluno.set_password(nova_senha)
+                
+                # Atualizar email se foi alterado
+                if novo_email and novo_email != aluno.email:
+                    aluno.email = novo_email
+                
+                aluno.save()
+                
+                # Re-autenticar o usuário para manter a sessão
+                from django.contrib.auth import update_session_auth_hash
+                update_session_auth_hash(request, aluno)
+                
+                sucesso = "Alterações salvas com sucesso!"
+                
+            except Exception as e:
+                erro = f"Erro ao salvar alterações: {str(e)}"
 
     context = {
         'aluno': {
-            'nome_completo': request.user.get_full_name() or request.user.username,
-            'matricula': request.user.username
+            'nome_completo': aluno.get_full_name() or aluno.username,
+            'matricula': aluno.username,
+            'email': aluno.email or ''
         },
-        'sucesso': sucesso
+        'aluno_nome': aluno.first_name,
+        'sucesso': sucesso,
+        'erro': erro
     }
     return render(request, 'core/perfil.html', context)
 
-@login_required(login_url='login')
-def meus_interesses_view(request):
-    return render(request, 'core/meus_interesses.html')
 
 @login_required(login_url='login')
 def disciplinas_view(request):
@@ -261,7 +296,6 @@ def disciplinas_view(request):
         lista_final.append({
             'codigo': d.codigo,
             'nome': d.nome,
-            'area': 'Geral',
             'selecionada': d.codigo in meus_interesses,
 
             'tem_monitores': tem_monitores,
@@ -274,6 +308,7 @@ def disciplinas_view(request):
     }
     return render(request, 'core/lista_disciplina.html', context)
 
+
 @login_required(login_url='login')
 def meus_interesses_view(request):
     aluno = request.user
@@ -285,119 +320,104 @@ def meus_interesses_view(request):
         'aluno_nome': aluno.first_name
     })
 
-def contar_respostas_recursivo(respostas):
-    if not respostas:
-        return 0
-    total = 0
-    for resp in respostas:
-        total += 1
-        if 'respostas' in resp and resp['respostas']:
-            total += contar_respostas_recursivo(resp['respostas'])
-    return total
-
+ 
 @login_required(login_url='login')
-def disciplina_monitor_view(request, codigo_disciplina):
+def disciplina_view(request, codigo_disciplina):
     """
-    Tela principal de integração: Mostra Horários e Fórum da Disciplina.
+    Tela de Disciplina: Exibe Horários e Fórum.
+    - Monitor da disciplina: Template com controles de edição
+    - Aluno comum: Template somente leitura
     """
     aluno = request.user
-    disciplina = DisciplinaService.get_Disciplina(codigo_disciplina)
+
+    # Verificar se a disciplina existe
+    try:
+        disciplina = DisciplinaService.get_Disciplina(codigo_disciplina)
+    except CodigoDisciplinaInvalidoException:
+        messages.error(request, "Esta disciplina não existe no sistema.")
+        return redirect('meus_interesses')
+
+    eh_monitor_desta = (aluno.monitor_de == disciplina)
     
-    # 1. Processar Formulários (POST)
+    # 1. PROCESSAR FORMULÁRIOS (POST)
     if request.method == 'POST':
         form_type = request.POST.get('form_type')
         
         try:
+            # --- Tópicos do Fórum ---
             if form_type == 'novo_topico':
-                titulo = request.POST.get('titulo')
-                texto = request.POST.get('texto')
-
                 MensagemForumService.criarTopicoWeb(
                     matricula=aluno.username,
                     codigoDisciplina=codigo_disciplina,
-                    titulo=titulo,
-                    texto=texto
+                    titulo=request.POST.get('titulo'),
+                    texto=request.POST.get('texto')
                 )
                 messages.success(request, "Tópico criado com sucesso!")
 
             elif form_type == 'responder_topico':
                 id_msg = request.POST.get('id_mensagem')
-                texto = request.POST.get('texto')
-
                 MensagemForumService.responderTopicoWeb(
                     matricula=aluno.username,
                     idMensagem=id_msg,
-                    texto=texto
+                    texto=request.POST.get('texto')
                 )
                 messages.success(request, "Resposta enviada!")
-
+                
+                # Redirecionar mantendo o tópico expandido
                 from core.models import MensagemForum
                 mensagem = MensagemForum.objects.get(id=id_msg)
-
                 topico_raiz = mensagem
                 while topico_raiz.resposta_para is not None:
                     topico_raiz = topico_raiz.resposta_para
+                    
+                return redirect(f"{request.path}?expandir={topico_raiz.id}")
 
-                from django.urls import reverse
-                url = reverse('disciplina_monitor', kwargs={'codigo_disciplina': codigo_disciplina})
-                return redirect(f"{url}?expandir={topico_raiz.id}")
-
+            # --- Horários (apenas monitor) ---
             elif form_type == 'novo_horario':
-                if aluno.monitor_de != disciplina:
+                if not eh_monitor_desta:
                     messages.error(request, "Você não é monitor desta disciplina.")
                 else:
-                    dia = request.POST.get('dia_semana')
-                    inicio = request.POST.get('hora_inicio')
-                    fim = request.POST.get('hora_fim')
-                    local = request.POST.get('local')
-
                     HorarioAtendimentoService.cadastrarHorario(
                         matricula=aluno.username,
-                        diaSemana=dia,
-                        horarioInicio=inicio,
-                        horarioFim=fim,
-                        local=local
+                        diaSemana=request.POST.get('dia_semana'),
+                        horarioInicio=request.POST.get('hora_inicio'),
+                        horarioFim=request.POST.get('hora_fim'),
+                        local=request.POST.get('local')
                     )
-                    messages.success(request, "Horário de monitoria cadastrado!")
+                    messages.success(request, "Horário cadastrado!")
 
             elif form_type == 'editar_horario':
-                horario_id = request.POST.get('horario_id')
-                if aluno.monitor_de != disciplina:
+                if not eh_monitor_desta:
                     messages.error(request, "Você não é monitor desta disciplina.")
                 else:
-                    dia = request.POST.get('dia_semana')
-                    inicio = request.POST.get('hora_inicio')
-                    fim = request.POST.get('hora_fim')
-                    local = request.POST.get('local')
-                    
                     HorarioAtendimentoService.editarHorarioWeb(
-                        idHorario=horario_id,
+                        idHorario=request.POST.get('horario_id'),
                         matriculaMonitor=aluno.username,
-                        diaSemana=dia,
-                        horarioInicio=inicio,
-                        horarioFim=fim,
-                        local=local
+                        diaSemana=request.POST.get('dia_semana'),
+                        horarioInicio=request.POST.get('hora_inicio'),
+                        horarioFim=request.POST.get('hora_fim'),
+                        local=request.POST.get('local')
                     )
-                    messages.success(request, "Horário atualizado com sucesso!")
+                    messages.success(request, "Horário atualizado!")
 
             elif form_type == 'deletar_horario':
-                horario_id = request.POST.get('horario_id')
-                if aluno.monitor_de != disciplina:
+                if not eh_monitor_desta:
                     messages.error(request, "Você não é monitor desta disciplina.")
                 else:
                     HorarioAtendimentoService.removerHorarioWeb(
-                        idHorario=horario_id,
+                        idHorario=request.POST.get('horario_id'),
                         matriculaMonitor=aluno.username
                     )
-                    messages.success(request, "Horário removido com sucesso!")
+                    messages.success(request, "Horário removido!")
 
         except Exception as e:
-            messages.error(request, f"Erro ao processar: {str(e)}")
+            messages.error(request, f"Erro: {str(e)}")
         
         return redirect('disciplina_monitor', codigo_disciplina=codigo_disciplina)
 
-    # 2. Carregar Dados para Exibição (GET)
-
+    # 2. CARREGAR DADOS (GET)
+    
+    # Ordenação de dias da semana
     ordem_dias = Case(
         When(dia_semana='SEG', then=1),
         When(dia_semana='TER', then=2),
@@ -408,8 +428,8 @@ def disciplina_monitor_view(request, codigo_disciplina):
         When(dia_semana='DOM', then=7),
         output_field=IntegerField()
     )
-
-    eh_monitor_desta = (aluno.monitor_de == disciplina)
+    
+    # Buscar Horários
     horarios = []
     meus_horarios = []
     horarios_outros = []
@@ -417,6 +437,7 @@ def disciplina_monitor_view(request, codigo_disciplina):
     
     try:
         todos_horarios = HorarioAtendimentoService.getHorariosDisciplina(codigo_disciplina)
+        horarios = todos_horarios  # Para o calendário
         
         if eh_monitor_desta:
             meus_horarios = todos_horarios.filter(monitor=aluno).annotate(
@@ -430,40 +451,27 @@ def disciplina_monitor_view(request, codigo_disciplina):
             horarios_agrupados = todos_horarios.annotate(
                 ordem_dia=ordem_dias
             ).order_by('monitor', 'ordem_dia', 'hora_inicio')
-
-        horarios = todos_horarios
-        
     except:
-        horarios = []
-        meus_horarios = []
-        horarios_outros = []
-        horarios_agrupados = []
+        pass  # Mantém listas vazias
 
+    # Buscar Tópicos do Fórum
     topicos_lista = []
     try:
         objs_topicos = MensagemForumService.getTopicosDaDisciplina(codigo_disciplina).order_by('-data_envio')
         
         for t in objs_topicos:
-            respostas_aninhadas = []
-            try:
-                respostas_aninhadas = MensagemForumService.getRespostasComAninhamento(t.id)
-            except:
-                pass
-
-            total_respostas = contar_respostas_recursivo(respostas_aninhadas)
-            
+            respostas_aninhadas = MensagemForumService.getRespostasComAninhamento(t.id)
             topicos_lista.append({
                 'objeto': t,
                 'respostas': respostas_aninhadas,
-                'total_respostas': total_respostas  # Novo campo
+                'total_respostas': MensagemForumService.contarRespostasTotal(respostas_aninhadas)
             })
-            
     except TopicosAindaNaoCadastradosException:
-        topicos_lista = []
+        pass  # Mantém lista vazia
     except Exception as e:
-        print(f"Erro ao buscar tópicos: {e}") 
-        topicos_lista = []
+        print(f"Erro ao buscar tópicos: {e}")
 
+    # 3. RENDERIZAR
     context = {
         'disciplina': disciplina,
         'horarios': horarios,
@@ -475,10 +483,9 @@ def disciplina_monitor_view(request, codigo_disciplina):
         'eh_monitor_desta': eh_monitor_desta
     }
 
-    if aluno.monitor_de == disciplina:
-        return render(request, 'core/disciplina_monitor.html', context)
-    else:
-        return render(request, 'core/disciplina.html', context)
+    template = 'core/disciplina_monitor.html' if eh_monitor_desta else 'core/disciplina.html'
+    return render(request, template, context)
+
 
 # Views para Administradores
 
@@ -559,7 +566,7 @@ def admin_monitores_view(request):
     }
 
     return render(request, 'core/monitores_admin.html', context)
-
+ 
 @login_required(login_url='login')
 def admin_disciplinas_view(request):
     if not request.user.is_staff:

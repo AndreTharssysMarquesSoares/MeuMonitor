@@ -224,3 +224,18 @@ class MensagemForumService:
             })
         
         return resultado
+
+    @staticmethod
+    def contarRespostasTotal(respostas):
+        """
+        Conta recursivamente todas as respostas (incluindo sub-respostas).
+        Recebe uma lista de dicionários com 'objeto' e 'respostas'.
+        """
+        if not respostas:
+            return 0
+        total = 0
+        for resp in respostas:
+            total += 1
+            if 'respostas' in resp and resp['respostas']:
+                total += MensagemForumService.contarRespostasTotal(resp['respostas'])
+        return total
