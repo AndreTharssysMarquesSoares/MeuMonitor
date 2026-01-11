@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.http import HttpResponse
+from django.db.models import Case, When, IntegerField
 from core.services.aluno_service import AlunoService
 from django.contrib.auth.decorators import login_required
 from core.services.disciplina_service import DisciplinaService
@@ -22,6 +23,10 @@ from core.exceptions.usuario_exceptions import (
 )
 from core.services.admin_service import AdminService
 from core.exceptions.disciplina_exceptions import DisciplinaJaCadastradaException, CodigoDisciplinaInvalidoException
+from core.services.horario_atendimento_service import HorarioAtendimentoService
+from core.services.mensagem_service import MensagemForumService
+from core.exceptions.mensagem_exceptions import TopicosAindaNaoCadastradosException
+from core.exceptions.horarios_atendimento_exceptions import HorarioNaoExisteException
     
 
 def cadastro_view(request):
@@ -83,6 +88,12 @@ def login_view(request):
         if request.user.is_staff:
             return redirect('admin_disciplinas')
         return redirect('dashboard')
+
+    # Consumir logs não exibidos
+    storage = messages.get_messages(request)
+    for _ in storage:
+        pass
+    storage.used = True
 
     if request.method == 'POST':
         usuario_login = request.POST.get('username_login') 
@@ -262,6 +273,214 @@ def disciplinas_view(request):
         'disciplinas': lista_final
     }
     return render(request, 'core/lista_disciplina.html', context)
+
+@login_required(login_url='login')
+def meus_interesses_view(request):
+    aluno = request.user
+    
+    interesses = aluno.interesses.all()
+
+    return render(request, 'core/meus_interesses.html', {
+        'interesses': interesses,
+        'aluno_nome': aluno.first_name
+    })
+
+def contar_respostas_recursivo(respostas):
+    if not respostas:
+        return 0
+    total = 0
+    for resp in respostas:
+        total += 1
+        if 'respostas' in resp and resp['respostas']:
+            total += contar_respostas_recursivo(resp['respostas'])
+    return total
+
+@login_required(login_url='login')
+def disciplina_monitor_view(request, codigo_disciplina):
+    """
+    Tela principal de integração: Mostra Horários e Fórum da Disciplina.
+    """
+    aluno = request.user
+    disciplina = DisciplinaService.get_Disciplina(codigo_disciplina)
+    
+    # 1. Processar Formulários (POST)
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+        
+        try:
+            if form_type == 'novo_topico':
+                titulo = request.POST.get('titulo')
+                texto = request.POST.get('texto')
+
+                MensagemForumService.criarTopicoWeb(
+                    matricula=aluno.username,
+                    codigoDisciplina=codigo_disciplina,
+                    titulo=titulo,
+                    texto=texto
+                )
+                messages.success(request, "Tópico criado com sucesso!")
+
+            elif form_type == 'responder_topico':
+                id_msg = request.POST.get('id_mensagem')
+                texto = request.POST.get('texto')
+
+                MensagemForumService.responderTopicoWeb(
+                    matricula=aluno.username,
+                    idMensagem=id_msg,
+                    texto=texto
+                )
+                messages.success(request, "Resposta enviada!")
+
+                from core.models import MensagemForum
+                mensagem = MensagemForum.objects.get(id=id_msg)
+
+                topico_raiz = mensagem
+                while topico_raiz.resposta_para is not None:
+                    topico_raiz = topico_raiz.resposta_para
+
+                from django.urls import reverse
+                url = reverse('disciplina_monitor', kwargs={'codigo_disciplina': codigo_disciplina})
+                return redirect(f"{url}?expandir={topico_raiz.id}")
+
+            elif form_type == 'novo_horario':
+                if aluno.monitor_de != disciplina:
+                    messages.error(request, "Você não é monitor desta disciplina.")
+                else:
+                    dia = request.POST.get('dia_semana')
+                    inicio = request.POST.get('hora_inicio')
+                    fim = request.POST.get('hora_fim')
+                    local = request.POST.get('local')
+
+                    HorarioAtendimentoService.cadastrarHorario(
+                        matricula=aluno.username,
+                        diaSemana=dia,
+                        horarioInicio=inicio,
+                        horarioFim=fim,
+                        local=local
+                    )
+                    messages.success(request, "Horário de monitoria cadastrado!")
+
+            elif form_type == 'editar_horario':
+                horario_id = request.POST.get('horario_id')
+                if aluno.monitor_de != disciplina:
+                    messages.error(request, "Você não é monitor desta disciplina.")
+                else:
+                    dia = request.POST.get('dia_semana')
+                    inicio = request.POST.get('hora_inicio')
+                    fim = request.POST.get('hora_fim')
+                    local = request.POST.get('local')
+                    
+                    HorarioAtendimentoService.editarHorarioWeb(
+                        idHorario=horario_id,
+                        matriculaMonitor=aluno.username,
+                        diaSemana=dia,
+                        horarioInicio=inicio,
+                        horarioFim=fim,
+                        local=local
+                    )
+                    messages.success(request, "Horário atualizado com sucesso!")
+
+            elif form_type == 'deletar_horario':
+                horario_id = request.POST.get('horario_id')
+                if aluno.monitor_de != disciplina:
+                    messages.error(request, "Você não é monitor desta disciplina.")
+                else:
+                    HorarioAtendimentoService.removerHorarioWeb(
+                        idHorario=horario_id,
+                        matriculaMonitor=aluno.username
+                    )
+                    messages.success(request, "Horário removido com sucesso!")
+
+        except Exception as e:
+            messages.error(request, f"Erro ao processar: {str(e)}")
+        
+        return redirect('disciplina_monitor', codigo_disciplina=codigo_disciplina)
+
+    # 2. Carregar Dados para Exibição (GET)
+
+    ordem_dias = Case(
+        When(dia_semana='SEG', then=1),
+        When(dia_semana='TER', then=2),
+        When(dia_semana='QUA', then=3),
+        When(dia_semana='QUI', then=4),
+        When(dia_semana='SEX', then=5),
+        When(dia_semana='SAB', then=6),
+        When(dia_semana='DOM', then=7),
+        output_field=IntegerField()
+    )
+
+    eh_monitor_desta = (aluno.monitor_de == disciplina)
+    horarios = []
+    meus_horarios = []
+    horarios_outros = []
+    horarios_agrupados = []
+    
+    try:
+        todos_horarios = HorarioAtendimentoService.getHorariosDisciplina(codigo_disciplina)
+        
+        if eh_monitor_desta:
+            meus_horarios = todos_horarios.filter(monitor=aluno).annotate(
+                ordem_dia=ordem_dias
+            ).order_by('ordem_dia', 'hora_inicio')
+            
+            horarios_outros = todos_horarios.exclude(monitor=aluno).annotate(
+                ordem_dia=ordem_dias
+            ).order_by('monitor', 'ordem_dia', 'hora_inicio')
+        else:
+            horarios_agrupados = todos_horarios.annotate(
+                ordem_dia=ordem_dias
+            ).order_by('monitor', 'ordem_dia', 'hora_inicio')
+
+        horarios = todos_horarios
+        
+    except:
+        horarios = []
+        meus_horarios = []
+        horarios_outros = []
+        horarios_agrupados = []
+
+    topicos_lista = []
+    try:
+        objs_topicos = MensagemForumService.getTopicosDaDisciplina(codigo_disciplina).order_by('-data_envio')
+        
+        for t in objs_topicos:
+            respostas_aninhadas = []
+            try:
+                respostas_aninhadas = MensagemForumService.getRespostasComAninhamento(t.id)
+            except:
+                pass
+
+            total_respostas = contar_respostas_recursivo(respostas_aninhadas)
+            
+            topicos_lista.append({
+                'objeto': t,
+                'respostas': respostas_aninhadas,
+                'total_respostas': total_respostas  # Novo campo
+            })
+            
+    except TopicosAindaNaoCadastradosException:
+        topicos_lista = []
+    except Exception as e:
+        print(f"Erro ao buscar tópicos: {e}") 
+        topicos_lista = []
+
+    context = {
+        'disciplina': disciplina,
+        'horarios': horarios,
+        'meus_horarios': meus_horarios,
+        'horarios_outros': horarios_outros,
+        'horarios_agrupados': horarios_agrupados,
+        'topicos': topicos_lista,
+        'aluno': aluno,
+        'eh_monitor_desta': eh_monitor_desta
+    }
+
+    if aluno.monitor_de == disciplina:
+        return render(request, 'core/disciplina_monitor.html', context)
+    else:
+        return render(request, 'core/disciplina.html', context)
+
+# Views para Administradores
 
 @login_required(login_url='login')
 def admin_monitores_view(request):

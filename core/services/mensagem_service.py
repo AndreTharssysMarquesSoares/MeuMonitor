@@ -145,3 +145,82 @@ class MensagemForumService:
     def getAutor(idMensagem):
         mensagem = MensagemForumService.getMensagem(idMensagem)
         return mensagem.autor
+    
+    @staticmethod
+    def criarTopicoWeb(matricula, codigoDisciplina, titulo, texto):
+        """
+        Cria um novo tópico no fórum (versão web - usuário já autenticado).
+        """
+        from core.models import Usuario, Disciplina
+
+        try:
+            aluno = Usuario.objects.get(username=matricula)
+        except Usuario.DoesNotExist:
+            raise Exception("Aluno não encontrado.")
+
+        try:
+            disciplina = Disciplina.objects.get(codigo=codigoDisciplina)
+        except Disciplina.DoesNotExist:
+            raise Exception("Disciplina não encontrada.")
+
+        if not titulo or not titulo.strip():
+            raise Exception("O título não pode estar vazio.")
+        
+        if not texto or not texto.strip():
+            raise Exception("O texto não pode estar vazio.")
+ 
+        topico = MensagemForumRepository.criarMensagem(
+            autor=aluno,
+            disciplina=disciplina,
+            titulo=titulo.strip(),
+            texto=texto.strip(),
+            resposta_para=None
+        )
+        
+        return topico
+    
+    @staticmethod
+    def responderTopicoWeb(matricula, idMensagem, texto):
+        """
+        Responde a um tópico existente (versão web - usuário já autenticado).
+        """
+        from core.models import Usuario, MensagemForum
+
+        try:
+            aluno = Usuario.objects.get(username=matricula)
+        except Usuario.DoesNotExist:
+            raise Exception("Aluno não encontrado.")
+
+        try:
+            mensagem_pai = MensagemForum.objects.get(id=idMensagem)
+        except MensagemForum.DoesNotExist:
+            raise Exception("Tópico não encontrado.")
+
+        if not texto or not texto.strip():
+            raise Exception("A resposta não pode estar vazia.")
+
+        resposta = MensagemForumRepository.criarMensagem(
+            autor=aluno,
+            disciplina=mensagem_pai.disciplina,
+            titulo=None,
+            texto=texto.strip(),
+            resposta_para=mensagem_pai
+        )
+        
+        return resposta
+    
+    @staticmethod
+    def getRespostasComAninhamento(id_mensagem):
+        from core.models import MensagemForum
+        
+        respostas_diretas = MensagemForum.objects.filter(resposta_para_id=id_mensagem).order_by('data_envio')
+        
+        resultado = []
+        for r in respostas_diretas:
+            sub_respostas = MensagemForumService.getRespostasComAninhamento(r.id)
+            resultado.append({
+                'objeto': r,
+                'respostas': sub_respostas
+            })
+        
+        return resultado

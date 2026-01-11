@@ -8,47 +8,53 @@ class HorarioAtendimentoRepository:
     
     @staticmethod
     def removeHorario(id):
-        HorarioAtendimento.objects.filter(id = id).delete()
+        HorarioAtendimento.objects.filter(id=id).delete()
     
     @staticmethod
     def getHorariosDoMonitor(matricula):
-        return HorarioAtendimento.objects.filter(matricula=matricula)
+        return HorarioAtendimento.objects.filter(monitor__username=matricula)
     
     @staticmethod
     def getHorariosDaSala(local):
-        return HorarioAtendimento.objects.filter(local = local)
+        return HorarioAtendimento.objects.filter(local=local)
     
     @staticmethod
     def getHorariosDaDisciplina(codigoDisciplina):
-        return HorarioAtendimento.objects.filter(disciplina=codigoDisciplina)
+        return HorarioAtendimento.objects.filter(disciplina__codigo=codigoDisciplina)
     
     @staticmethod
     def getHoraInicio(id):
-        return HorarioAtendimento.objects.filter(id = id).first().hora_inicio
+        horario = HorarioAtendimento.objects.filter(id=id).first()
+        return horario.hora_inicio if horario else None
     
     @staticmethod
     def getHoraFim(id):
-        return HorarioAtendimento.objects.filter(id = id).first().hora_fim
+        horario = HorarioAtendimento.objects.filter(id=id).first()
+        return horario.hora_fim if horario else None
     
     @staticmethod
     def getDiaSemana(id):
-        return HorarioAtendimento.objects.filter(id = id).first().dia_semana
+        horario = HorarioAtendimento.objects.filter(id=id).first()
+        return horario.dia_semana if horario else None
     
     @staticmethod
     def getMonitor(id):
-        return HorarioAtendimento.objects.filter(id = id).first().monitor
+        horario = HorarioAtendimento.objects.filter(id=id).first()
+        return horario.monitor if horario else None
     
     @staticmethod
     def getDisciplina(id):
-        return HorarioAtendimento.objects.filter(id = id).first().disciplina
+        horario = HorarioAtendimento.objects.filter(id=id).first()
+        return horario.disciplina if horario else None
     
     @staticmethod
     def getLocal(id):
-        return HorarioAtendimento.objects.filter(id = id).first().local
+        horario = HorarioAtendimento.objects.filter(id=id).first()
+        return horario.local if horario else None
     
     @staticmethod
     def getHorario(id):
-        return HorarioAtendimento.objects.filter(id = id).first
+        return HorarioAtendimento.objects.filter(id=id).first()
     
     @staticmethod
     def salvar(horario):
