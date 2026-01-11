@@ -15,28 +15,36 @@ class HorarioAtendimentoRepository:
         return HorarioAtendimento.objects.filter(matricula=matricula)
     
     @staticmethod
+    def getHorariosDaSala(local):
+        return HorarioAtendimento.objects.filter(local = local)
+    
+    @staticmethod
     def getHorariosDaDisciplina(codigoDisciplina):
         return HorarioAtendimento.objects.filter(disciplina=codigoDisciplina)
     
     @staticmethod
-    def getHorarioInicio(id):
+    def getHoraInicio(id):
         return HorarioAtendimento.objects.filter(id = id).first().hora_inicio
     
     @staticmethod
-    def getHorarioFim(id):
+    def getHoraFim(id):
         return HorarioAtendimento.objects.filter(id = id).first().hora_fim
     
     @staticmethod
-    def getHorarioDiaSemana(id):
+    def getDiaSemana(id):
         return HorarioAtendimento.objects.filter(id = id).first().dia_semana
     
     @staticmethod
-    def getHorarioMonitor(id):
+    def getMonitor(id):
         return HorarioAtendimento.objects.filter(id = id).first().monitor
     
     @staticmethod
-    def getHorarioDisciplina(id):
+    def getDisciplina(id):
         return HorarioAtendimento.objects.filter(id = id).first().disciplina
+    
+    @staticmethod
+    def getLocal(id):
+        return HorarioAtendimento.objects.filter(id = id).first().local
     
     @staticmethod
     def getHorario(id):
