@@ -24,7 +24,7 @@ from core.exceptions.disciplina_exceptions import DisciplinaJaCadastradaExceptio
 from core.services.horario_atendimento_service import HorarioAtendimentoService
 from core.services.mensagem_service import MensagemForumService
 from core.exceptions.mensagem_exceptions import TopicosAindaNaoCadastradosException
-from core.exceptions.horarios_atendimento_exceptions import HorarioNaoExisteException
+from core.exceptions.horario_atendimento_exceptions import HorarioNaoExisteException
     
 
 
