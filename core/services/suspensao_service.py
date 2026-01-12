@@ -4,7 +4,6 @@ from core.exceptions.disciplina_exceptions import CodigoDisciplinaInvalidoExcept
 from core.repositories.suspensao_repository import SuspensaoRepository
 from core.services.aluno_service import AlunoService
 from core.services.usuario_service import UsuarioService
-from core.services.admin_service import AdminService
 from core.services.disciplina_service import DisciplinaService
 from django.utils import timezone
 
