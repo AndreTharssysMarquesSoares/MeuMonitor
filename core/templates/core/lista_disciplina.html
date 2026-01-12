@@ -103,7 +103,6 @@
                                 {% endif %}
                             </div>
                             <h3 class="texto-nome text-lg font-medium text-gray-900 mt-1">{{ disciplina.nome }}</h3>
-                            <p class="texto-area text-sm text-gray-500">{{ disciplina.area }}</p>
                         </div>
                     </div>
 
@@ -163,10 +162,9 @@
                 // Pega o Nome, o Código e a Área da disciplina atual
                 let nome = itens[i].getElementsByClassName('texto-nome')[0].innerText.toLowerCase();
                 let codigo = itens[i].getElementsByClassName('texto-codigo')[0].innerText.toLowerCase();
-                let area = itens[i].getElementsByClassName('texto-area')[0].innerText.toLowerCase();
 
                 // 4. Verifica se o texto digitado está em algum desses campos
-                if (nome.includes(filtro) || codigo.includes(filtro) || area.includes(filtro)) {
+                if (nome.includes(filtro) || codigo.includes(filtro)) {
                     itens[i].style.display = ""; // Mostra
                     achouAlgum = true;
                 } else {
