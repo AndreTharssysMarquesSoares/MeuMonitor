@@ -53,7 +53,6 @@
             {% for disciplina in disciplinas %}
             <a href="{% url 'disciplina_monitor' disciplina.codigo %}" 
                class="card-disciplina bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-blue-500 hover:shadow-md transition-all flex justify-between items-center group">
-                
                 <h3 class="text-xl font-bold text-gray-800 group-hover:text-blue-700 nome-disciplina">
                     {{ disciplina.nome }}
                 </h3>
@@ -99,14 +98,13 @@
                 let textoCodigo = codigo.textContent || codigo.innerText;
 
                 if (textoNome.toUpperCase().indexOf(filter) > -1 || textoCodigo.toUpperCase().indexOf(filter) > -1) {
-                    cards[i].style.display = ""; // Mostra o card (flex padrão da classe css)
+                    cards[i].style.display = "";
                     visibleCount++;
                 } else {
-                    cards[i].style.display = "none"; // Esconde o card
+                    cards[i].style.display = "none"; 
                 }
             }
 
-            // Controle da mensagem de "sem resultados" na busca
             let noResultsMsg = document.getElementById('no-results');
             if (visibleCount === 0 && cards.length > 0) {
                 noResultsMsg.classList.remove('hidden');
