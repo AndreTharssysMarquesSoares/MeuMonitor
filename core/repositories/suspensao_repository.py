@@ -1,4 +1,5 @@
 from core.models import Suspensao
+from django.db.models import QuerySet
 
 class SuspensaoRepository:
     
@@ -11,20 +12,20 @@ class SuspensaoRepository:
         Suspensao.objects.filter(id=id).first().delete()
         
     @staticmethod
-    def removerSuspensaoMatriculaDisciplina(matricula, disciplina):
-        Suspensao.objects.filter(aluno=matricula, disciplina=disciplina).first().delete()
-        
+    def getSuspensaoId(id):
+        return Suspensao.objects.filter(id=id)
+    
     @staticmethod
-    def getSuspensaoMatricula(matricula):
+    def getSuspensoesMatricula(matricula) -> QuerySet[Suspensao]:
         return Suspensao.objects.filter(aluno=matricula)
         
     @staticmethod
-    def getSuspensaoDisciplina(disciplina):
+    def getSuspensoesDisciplina(disciplina) -> QuerySet[Suspensao]:
         return Suspensao.objects.filter(disciplina=disciplina)
     
     @staticmethod
-    def getSuspensaoMatriculaDisciplina(matricula, disciplina):
-        return Suspensao.objects.filter(aluno=matricula, disciplina=disciplina).first()
+    def getSuspensoesMatriculaDisciplina(matricula, disciplina)-> QuerySet[Suspensao]:
+        return Suspensao.objects.filter(aluno=matricula, disciplina=disciplina)
     
     @staticmethod
     def getDataFim(id):

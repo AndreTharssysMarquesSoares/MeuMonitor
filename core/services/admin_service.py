@@ -239,7 +239,7 @@ class AdminService:
         SuspensaoService.removerSuspensaoId(id)
         
     @staticmethod
-    def removerSuspensaoMatricula(username, senha, matricula):
+    def removerSuspensoesMatricula(username, senha, matricula):
         admin = AdminService.getAdmin(username)
         if not admin: raise AdminInvalidoException()
         if not UsuarioService.validarSenha(admin, senha): raise SenhaIncorretaException()
@@ -248,7 +248,7 @@ class AdminService:
         
         
     @staticmethod
-    def removerSuspensaoMatrculaDisciplina(username, senha, matricula, disciplina):
+    def removerSuspensoesMatrculaDisciplina(username, senha, matricula, disciplina):
         admin = AdminService.getAdmin(username)
         if not admin: raise AdminInvalidoException()
         if not UsuarioService.validarSenha(admin, senha): raise SenhaIncorretaException()

@@ -63,9 +63,10 @@ class MensagemForumService:
         if not UsuarioService.validarSenha(aluno, senha): raise SenhaIncorretaException()
         
         hoje = timezone.now().date()
-        suspensao = SuspensaoService.getSuspensoesAlunoDisciplina(matricula, codigoDisciplina)
+        suspensoes = SuspensaoService.getSuspensoesAlunoDisciplina(matricula, codigoDisciplina)
         
-        if suspensao is not None and suspensao.data_fim >= hoje: raise AlunoSuspensoNesseForumException()
+        for s in suspensoes:
+            if s.data_fim >= hoje: raise AlunoSuspensoNesseForumException()
         
         if titulo is None or texto is None or codigoDisciplina is None or titulo == "" or texto == "" or codigoDisciplina == "": raise DadosInválidosException()
         
@@ -90,9 +91,10 @@ class MensagemForumService:
         if idMensagemRespondida is None or texto is None or codigoDisciplina is None or idMensagemRespondida == "" or texto == "" or codigoDisciplina == "": raise DadosInválidosException()
         
         hoje = timezone.now().date()
-        suspensao = SuspensaoService.getSuspensoesAlunoDisciplina(matricula, codigoDisciplina)
+        suspensoes = SuspensaoService.getSuspensoesAlunoDisciplina(matricula, codigoDisciplina)
         
-        if suspensao is not None and suspensao.data_fim >= hoje: raise AlunoSuspensoNesseForumException()
+        for s in suspensoes:
+            if s.data_fim >= hoje: raise AlunoSuspensoNesseForumException()
         
         mensagemPai = MensagemForumRepository.getMensagem(idMensagemRespondida)
         
