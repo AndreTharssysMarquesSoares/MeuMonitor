@@ -16,7 +16,7 @@ class SuspensaoRepository:
         
     @staticmethod
     def getSuspensaoMatricula(matricula):
-        return Suspensao.objects.filter(aluno=matricula).first()
+        return Suspensao.objects.filter(aluno=matricula)
         
     @staticmethod
     def getSuspensaoDisciplina(disciplina):

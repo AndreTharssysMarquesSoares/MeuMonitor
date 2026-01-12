@@ -6,6 +6,10 @@ from core.exceptions.usuario_exceptions import AlunoNaoCadastradoException, Senh
 from core.exceptions.disciplina_exceptions import DisciplinaJaCadastradaException, CodigoDisciplinaInvalidoException
 from core.repositories.disciplina_repository import DisciplinaRepository
 from core.models import HorarioAtendimento
+from core.services.suspensao_service import SuspensaoService
+from core.exceptions.suspensao_exceptions import SuspensaoNaoExisteException
+from datetime import datetime
+from django.utils import timezone
 
 class AdminService:
     
@@ -199,3 +203,54 @@ class AdminService:
     @staticmethod
     def getTodosMonitoresWeb():
         return UsuarioRepository.get_monitores()
+    
+    @staticmethod
+    def criarSuspensao(username, senha, dataFim, motivo, matricula, disciplina):
+        admin = AdminService.getAdmin(username)
+        if not admin: raise AdminInvalidoException()
+        if not UsuarioService.validarSenha(admin, senha): raise SenhaIncorretaException()
+        
+        if dataFim is None or motivo is None or matricula is None or disciplina is None or dataFim == "" or motivo == "" or matricula == "" or disciplina == "": raise DadosInvalidoException()
+        
+        try:
+            dataFim = datetime.strptime(dataFim, "%Y-%m-%d").date() #Formato esperado no back yyyy-mm-dd
+        except (ValueError, TypeError):
+            raise DadosInvalidoException()
+        
+        hoje = timezone.now().date()
+        if dataFim <= hoje:
+            raise DadosInvalidoException()
+        
+        aluno = AlunoService.getAluno(matricula)
+        if not aluno: raise AlunoNaoCadastradoException()
+        
+        disciplina = DisciplinaService.get_Disciplina(disciplina)
+        if not disciplina: raise CodigoDisciplinaInvalidoException()
+        
+        suspensao = SuspensaoService.criarSuspensao(dataFim, motivo, matricula, disciplina)
+        return suspensao
+    
+    @staticmethod
+    def removerSuspensaoId(username, senha, id):
+        admin = AdminService.getAdmin(username)
+        if not admin: raise AdminInvalidoException()
+        if not UsuarioService.validarSenha(admin, senha): raise SenhaIncorretaException()
+        
+        SuspensaoService.removerSuspensaoId(id)
+        
+    @staticmethod
+    def removerSuspensaoMatricula(username, senha, matricula):
+        admin = AdminService.getAdmin(username)
+        if not admin: raise AdminInvalidoException()
+        if not UsuarioService.validarSenha(admin, senha): raise SenhaIncorretaException()
+        
+        SuspensaoService.removerSuspensaoMatricula(matricula)
+        
+        
+    @staticmethod
+    def removerSuspensaoMatrculaDisciplina(username, senha, matricula, disciplina):
+        admin = AdminService.getAdmin(username)
+        if not admin: raise AdminInvalidoException()
+        if not UsuarioService.validarSenha(admin, senha): raise SenhaIncorretaException()
+        
+        SuspensaoService.removerSuspensaoMatriculaDisciplina(matricula, disciplina)
