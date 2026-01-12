@@ -13,3 +13,7 @@ class TopicosAindaNaoCadastradosException(Exception):
 class NenhumaRespostaEncontradaException(Exception):
     def __init__(self, mensagem="Nenhuma Resposta cadastrada"):
         super().__init__(mensagem)
+        
+class AlunoSuspensoNesseForumException(Exception):
+    def __init__(self, mensagem="Aluno esta suspenso nesse Forum"):
+        super().__init__(mensagem)

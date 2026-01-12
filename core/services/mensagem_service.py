@@ -3,8 +3,10 @@ from core.services.admin_service import AdminService
 from core.services.aluno_service import AlunoService
 from core.services.usuario_service import UsuarioService
 from core.services.disciplina_service import DisciplinaService
+from core.services.suspensao_service import SuspensaoService
 from core.exceptions.usuario_exceptions import SenhaIncorretaException 
-from core.exceptions.mensagem_exceptions import DadosInválidosException, MensagemNaoEncontradaException, TopicosAindaNaoCadastradosException, NenhumaRespostaEncontradaException
+from core.exceptions.mensagem_exceptions import DadosInválidosException, MensagemNaoEncontradaException, TopicosAindaNaoCadastradosException, NenhumaRespostaEncontradaException, AlunoSuspensoNesseForumException
+from django.utils import timezone
 
 class MensagemForumService:
     
@@ -60,6 +62,12 @@ class MensagemForumService:
         
         if not UsuarioService.validarSenha(aluno, senha): raise SenhaIncorretaException()
         
+        hoje = timezone.now().date()
+        suspensoes = SuspensaoService.getSuspensoesAlunoDisciplina(matricula, codigoDisciplina)
+        
+        for s in suspensoes:
+            if s.data_fim >= hoje: raise AlunoSuspensoNesseForumException()
+        
         if titulo is None or texto is None or codigoDisciplina is None or titulo == "" or texto == "" or codigoDisciplina == "": raise DadosInválidosException()
         
         topico = MensagemForumRepository.criarMensagem(
@@ -81,6 +89,12 @@ class MensagemForumService:
         if not UsuarioService.validarSenha(aluno, senha): raise SenhaIncorretaException()
         
         if idMensagemRespondida is None or texto is None or codigoDisciplina is None or idMensagemRespondida == "" or texto == "" or codigoDisciplina == "": raise DadosInválidosException()
+        
+        hoje = timezone.now().date()
+        suspensoes = SuspensaoService.getSuspensoesAlunoDisciplina(matricula, codigoDisciplina)
+        
+        for s in suspensoes:
+            if s.data_fim >= hoje: raise AlunoSuspensoNesseForumException()
         
         mensagemPai = MensagemForumRepository.getMensagem(idMensagemRespondida)
         
