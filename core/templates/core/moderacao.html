@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 min-h-screen font-sans">
+
     <header class="bg-white shadow-sm sticky top-0 z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
             <div class="flex justify-between items-center h-16">
@@ -42,38 +43,77 @@
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                     </div>
-                    <input type="text" id="search-input" onkeyup="filtrarTabela()" placeholder="Buscar disciplina..." 
+                    <input type="text" id="search-input" onkeyup="filtrarCards()" placeholder="Buscar disciplina..." 
                         class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out">
                 </div>
             </div>
         </div>
 
-        <div class="grid gap-4">
-    <a href="{% url 'disciplina_monitor' %}" 
-       class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-blue-500 hover:shadow-md transition-all flex justify-between items-center group">
-        <h3 class="text-xl font-bold text-gray-800 group-hover:text-blue-700">Cálculo Diferencial e Integral I</h3>
-        
-        <div class="flex items-center gap-3">
-            <div class="bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner">3456789</div>
-            <svg class="w-6 h-6 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
+        <div class="grid gap-4" id="container-disciplinas">
+            {% for disciplina in disciplinas %}
+            <a href="{% url 'disciplina_monitor' disciplina.codigo %}" 
+               class="card-disciplina bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-blue-500 hover:shadow-md transition-all flex justify-between items-center group">
+                
+                <h3 class="text-xl font-bold text-gray-800 group-hover:text-blue-700 nome-disciplina">
+                    {{ disciplina.nome }}
+                </h3>
+                
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner codigo-disciplina">
+                        {{ disciplina.codigo }}
+                    </div>
+                    <svg class="w-6 h-6 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </div>
+            </a>
+            {% empty %}
+            <div class="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300 col-span-full">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhuma disciplina encontrada</h3>
+                <p class="mt-1 text-sm text-gray-500">Você ainda não está moderando nenhuma disciplina.</p>
+            </div>
+            {% endfor %}
+            
+            <div id="no-results" class="hidden text-center py-8 text-gray-500 col-span-full">
+                Nenhuma disciplina corresponde à sua busca.
+            </div>
         </div>
-    </a>
-
-    <a href="#" 
-       class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-blue-500 hover:shadow-md transition-all flex justify-between items-center group">
-        <h3 class="text-xl font-bold text-gray-800 group-hover:text-blue-700">Ondas e Linhas</h3>
-        
-        <div class="flex items-center gap-3">
-            <div class="bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner">1234567</div>
-            <svg class="w-6 h-6 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
-        </div>
-    </a>
-</div>
     </main>
 
+    <script>
+        function filtrarCards() {
+            let input = document.getElementById('search-input');
+            let filter = input.value.toUpperCase();
+            let container = document.getElementById('container-disciplinas');
+            let cards = container.getElementsByClassName('card-disciplina');
+            let visibleCount = 0;
+
+            for (let i = 0; i < cards.length; i++) {
+                let nome = cards[i].getElementsByClassName('nome-disciplina')[0];
+                let codigo = cards[i].getElementsByClassName('codigo-disciplina')[0];
+                
+                let textoNome = nome.textContent || nome.innerText;
+                let textoCodigo = codigo.textContent || codigo.innerText;
+
+                if (textoNome.toUpperCase().indexOf(filter) > -1 || textoCodigo.toUpperCase().indexOf(filter) > -1) {
+                    cards[i].style.display = ""; // Mostra o card (flex padrão da classe css)
+                    visibleCount++;
+                } else {
+                    cards[i].style.display = "none"; // Esconde o card
+                }
+            }
+
+            // Controle da mensagem de "sem resultados" na busca
+            let noResultsMsg = document.getElementById('no-results');
+            if (visibleCount === 0 && cards.length > 0) {
+                noResultsMsg.classList.remove('hidden');
+            } else {
+                noResultsMsg.classList.add('hidden');
+            }
+        }
+    </script>
 </body>
 </html>
