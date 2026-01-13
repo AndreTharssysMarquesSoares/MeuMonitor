@@ -24,60 +24,105 @@
                     <a href="#" class="bg-blue-50 text-blue-700 px-3 py-2 rounded-md text-sm font-medium">Moderação</a>
                 </nav>
                 <div class="flex items-center gap-4">
-                    <button class="relative p-2 text-gray-400 hover:text-gray-500 transition-colors">
-                        <span class="absolute top-1 right-1 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center border-2 border-white shadow-sm">1</span>
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                    </button>
                     <a href="{% url 'logout' %}" class="flex items-center gap-2 text-gray-500 hover:text-red-600 text-sm font-medium transition-colors"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg> Sair</a>
                 </div>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <div><h2 class="text-2xl font-bold text-gray-900">Gerenciar Disciplinas</h2></div>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <div class="flex items-center gap-3 w-full sm:w-auto">
-                <div class="relative w-full sm:w-64">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <div class="lg:col-span-2">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div><h2 class="text-2xl font-bold text-gray-900">Gerenciar Disciplinas</h2></div>
+                    
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <div class="relative w-full sm:w-64">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                            </div>
+                            <input type="text" id="search-input" onkeyup="filtrarCards()" placeholder="Buscar disciplina..." 
+                                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out">
+                        </div>
                     </div>
-                    <input type="text" id="search-input" onkeyup="filtrarCards()" placeholder="Buscar disciplina..." 
-                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out">
                 </div>
-            </div>
-        </div>
 
-        <div class="grid gap-4" id="container-disciplinas">
-            {% for disciplina in disciplinas %}
-            <a href="{% url 'disciplina_monitor' disciplina.codigo %}" 
-               class="card-disciplina bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-blue-500 hover:shadow-md transition-all flex justify-between items-center group">
-                <h3 class="text-xl font-bold text-gray-800 group-hover:text-blue-700 nome-disciplina">
-                    {{ disciplina.nome }}
-                </h3>
-                
-                <div class="flex items-center gap-3">
-                    <div class="bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner codigo-disciplina">
-                        {{ disciplina.codigo }}
+                <div class="grid gap-4" id="container-disciplinas">
+                    {% for disciplina in disciplinas %}
+                    <a href="{% url 'disciplina_monitor' disciplina.codigo %}" 
+                       class="card-disciplina bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-blue-500 hover:shadow-md transition-all flex justify-between items-center group">
+                        
+                        <h3 class="text-xl font-bold text-gray-800 group-hover:text-blue-700 nome-disciplina">
+                            {{ disciplina.nome }}
+                        </h3>
+                        
+                        <div class="flex items-center gap-3">
+                            <div class="bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner codigo-disciplina">
+                                {{ disciplina.codigo }}
+                            </div>
+                            <svg class="w-6 h-6 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                    </a>
+                    {% empty %}
+                    <div class="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300 col-span-full">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhuma disciplina encontrada</h3>
+                        <p class="mt-1 text-sm text-gray-500">Você ainda não está moderando nenhuma disciplina.</p>
                     </div>
-                    <svg class="w-6 h-6 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
+                    {% endfor %}
+                    
+                    <div id="no-results" class="hidden text-center py-8 text-gray-500 col-span-full">
+                        Nenhuma disciplina corresponde à sua busca.
+                    </div>
                 </div>
-            </a>
-            {% empty %}
-            <div class="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300 col-span-full">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhuma disciplina encontrada</h3>
-                <p class="mt-1 text-sm text-gray-500">Você ainda não está moderando nenhuma disciplina.</p>
             </div>
-            {% endfor %}
-            
-            <div id="no-results" class="hidden text-center py-8 text-gray-500 col-span-full">
-                Nenhuma disciplina corresponde à sua busca.
+
+            <div class="lg:col-span-1 space-y-6">
+                
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-amber-100 p-2 rounded-lg text-amber-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">Comunicado Geral</h3>
+                    </div>
+                    
+                    <p class="text-sm text-gray-500 mb-4">
+                        Envie uma notificação importante para <strong>todos os usuários</strong> da plataforma (Monitores e Alunos).
+                    </p>
+
+                    <form method="POST" action="" onsubmit="validarComunicado(event)"> 
+                        {% csrf_token %}
+                        <input type="hidden" name="acao" value="enviar_comunicado">
+                        
+                        <div id="error-comunicado" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                            <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span class="text-xs text-red-700 font-medium">Preencha o título e a mensagem.</span>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Título do Aviso</label>
+                                <input type="text" id="titulo-aviso" name="titulo" class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: Manutenção Programada">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Mensagem</label>
+                                <textarea id="mensagem-aviso" name="mensagem" rows="4" class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 resize-none" placeholder="Digite sua mensagem aqui..."></textarea>
+                            </div>
+
+                            <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                                Enviar para Todos
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </main>
@@ -98,7 +143,7 @@
                 let textoCodigo = codigo.textContent || codigo.innerText;
 
                 if (textoNome.toUpperCase().indexOf(filter) > -1 || textoCodigo.toUpperCase().indexOf(filter) > -1) {
-                    cards[i].style.display = "";
+                    cards[i].style.display = ""; 
                     visibleCount++;
                 } else {
                     cards[i].style.display = "none"; 
@@ -112,6 +157,24 @@
                 noResultsMsg.classList.add('hidden');
             }
         }
+
+        // validar forms
+        function validarComunicado(event) {
+            const titulo = document.getElementById('titulo-aviso').value.trim();
+            const mensagem = document.getElementById('mensagem-aviso').value.trim();
+            const errorBox = document.getElementById('error-comunicado');
+
+            if (!titulo || !mensagem) {
+                // impede o envio do formulário
+                event.preventDefault();
+                errorBox.classList.remove('hidden');
+                errorBox.classList.add('animate-pulse');
+                setTimeout(() => errorBox.classList.remove('animate-pulse'), 500);
+            } else {
+                errorBox.classList.add('hidden');
+            }
+        }
     </script>
+
 </body>
 </html>
