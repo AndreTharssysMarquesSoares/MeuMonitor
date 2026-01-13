@@ -2,7 +2,6 @@ from core.repositories.usuario_repository import UsuarioRepository
 from core.services.usuario_service import UsuarioService
 from core.services.disciplina_service import DisciplinaService
 from core.exceptions.usuario_exceptions import MatriculaInvalidaException, AlunoNaoCadastradoException, SenhaFracaException, AlunoJaCadastradoException, DadosInvalidoException, SenhaIncorretaException, AlunoInvalidoException, AlunoJaInteressadoException, AlunoNaoInteressadoException
-
 class AlunoService:
     
     @staticmethod
@@ -145,3 +144,7 @@ class AlunoService:
     def isMonitor(matricula):
         aluno = AlunoService.getAluno(matricula)
         return not (aluno.monitor_de is None)
+    
+    @staticmethod
+    def getAlunos():
+        return UsuarioRepository.get_alunos()

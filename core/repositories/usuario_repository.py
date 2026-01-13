@@ -1,4 +1,5 @@
 from core.models import Usuario, AlunoValido
+from django.db.models import QuerySet
 
 class UsuarioRepository:
     
@@ -39,7 +40,7 @@ class UsuarioRepository:
         return Usuario.objects.filter(id=id).first()
     
     @staticmethod
-    def get_alunos():
+    def get_alunos() -> QuerySet[Usuario]:
         return Usuario.objects.filter(tipo = 'ALUNO')
     
     @staticmethod
@@ -47,7 +48,7 @@ class UsuarioRepository:
         return Usuario.objects.filter(tipo = 'ALUNO', matricula=matricula).first()
     
     @staticmethod
-    def get_monitores():
+    def get_monitores() -> QuerySet[Usuario]:
         return Usuario.objects.filter(tipo = 'ALUNO', monitor_de__isnull=False)
     
     @staticmethod

@@ -7,7 +7,7 @@ from core.services.suspensao_service import SuspensaoService
 from core.exceptions.usuario_exceptions import SenhaIncorretaException 
 from core.exceptions.mensagem_exceptions import DadosInválidosException, MensagemNaoEncontradaException, TopicosAindaNaoCadastradosException, NenhumaRespostaEncontradaException, AlunoSuspensoNesseForumException
 from django.utils import timezone
-
+from core.services.notificacao_service import NotificacaoService, TipoNotificacao
 class MensagemForumService:
     
     @staticmethod
@@ -28,6 +28,14 @@ class MensagemForumService:
             resposta_para = None
         )
         
+        for a in disciplina.alunos_interessados.all():
+            NotificacaoService.gerarNotificacao(TipoNotificacao.FORUM, titulo, texto, a.matricula, topico.id)
+            
+        monitores = AlunoService.getMonitoresDisciplina(codigoDisciplina)
+        
+        for m in monitores:
+            NotificacaoService.gerarNotificacao(TipoNotificacao.FORUM, titulo, texto, m.matricula, topico.id)
+            
         return topico
         
     @staticmethod
@@ -51,6 +59,14 @@ class MensagemForumService:
             disciplina = disciplina.codigo,
             resposta_para = idMensagemRespondida
         )
+        
+        for a in disciplina.alunos_interessados.all():
+            NotificacaoService.gerarNotificacao(TipoNotificacao.FORUM, None, texto, a.matricula, mensagem.id)
+            
+        monitores = AlunoService.getMonitoresDisciplina(codigoDisciplina)
+        
+        for m in monitores:
+            NotificacaoService.gerarNotificacao(TipoNotificacao.FORUM, None, texto, m.matricula, mensagem.id)
         
         return mensagem
         
@@ -77,6 +93,14 @@ class MensagemForumService:
             disciplina = disciplina.codigo,
             resposta_para = None
         )
+        
+        for a in disciplina.alunos_interessados.all():
+            NotificacaoService.gerarNotificacao(TipoNotificacao.FORUM, titulo, texto, a.matricula, topico.id)
+            
+        monitores = AlunoService.getMonitoresDisciplina(codigoDisciplina)
+        
+        for m in monitores:
+            NotificacaoService.gerarNotificacao(TipoNotificacao.FORUM, titulo, texto, m.matricula, topico.id)
         
         return topico
         
@@ -108,6 +132,14 @@ class MensagemForumService:
             resposta_para = idMensagemRespondida
         )
         
+        for a in disciplina.alunos_interessados.all():
+            NotificacaoService.gerarNotificacao(TipoNotificacao.FORUM, None, texto, a.matricula, mensagem.id)
+            
+        monitores = AlunoService.getMonitoresDisciplina(codigoDisciplina)
+        
+        for m in monitores:
+            NotificacaoService.gerarNotificacao(TipoNotificacao.FORUM, None, texto, m.matricula, mensagem.id)
+            
         return mensagem
         
     @staticmethod
