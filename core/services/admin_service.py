@@ -10,6 +10,7 @@ from core.services.suspensao_service import SuspensaoService
 from core.exceptions.suspensao_exceptions import SuspensaoNaoExisteException
 from datetime import datetime
 from django.utils import timezone
+from core.services.notificacao_service import NotificacaoService, TipoNotificacao
 
 class AdminService:
     
@@ -254,3 +255,25 @@ class AdminService:
         if not UsuarioService.validarSenha(admin, senha): raise SenhaIncorretaException()
         
         SuspensaoService.removerSuspensaoMatriculaDisciplina(matricula, disciplina)
+        
+    @staticmethod
+    def enviarMensagemTodosUsuariosComoAdmin(username, senha, titulo, texto):
+        admin = AdminService.getAdmin(username)
+        if not admin: raise AdminInvalidoException()
+        if not UsuarioService.validarSenha(admin, senha): raise SenhaIncorretaException()
+        
+        alunos = AlunoService.getAlunos()
+        
+        for a in alunos:
+            NotificacaoService.gerarNotificacao(TipoNotificacao.ADMIN, titulo, texto, a.matricula)
+            
+    @staticmethod
+    def enviarMensagemTodosUsuariosComoSistema(username, senha, titulo, texto):
+        admin = AdminService.getAdmin(username)
+        if not admin: raise AdminInvalidoException()
+        if not UsuarioService.validarSenha(admin, senha): raise SenhaIncorretaException()
+        
+        alunos = AlunoService.getAlunos()
+        
+        for a in alunos:
+            NotificacaoService.gerarNotificacao(TipoNotificacao.SISTEMA, titulo, texto, a.matricula)
