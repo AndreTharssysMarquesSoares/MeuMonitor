@@ -1,0 +1,440 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moderação de Fóruns - Meu Monitor</title>
+    <style>
+    .overflow-y-auto::-webkit-scrollbar { width: 6px !important; }
+    .overflow-y-auto::-webkit-scrollbar-thumb { background-color: rgba(0, 0, 0, 0.1) !important; border-radius: 10px !important; }
+    .overflow-y-auto::-webkit-scrollbar-track { background: transparent !important; }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <img src="{% static 'core/img/MeuMonitor.png' %}" alt="Logo Meu Monitor" class="h-10 w-auto object-contain">
+                    <div><p class="text-xs text-gray-500 font-medium leading-none mt-1">{{ admin_nome }}</p></div>
+                </div>
+                <nav class="hidden md:flex space-x-8 items-center absolute left-1/2 transform -translate-x-1/2">
+                    <a href="{% url 'admin_disciplinas' %}" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Disciplinas</a>
+                    <a href="{% url 'admin_monitores' %}" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Monitores</a>
+                    <a href="#" class="bg-blue-50 text-blue-700 px-3 py-2 rounded-md text-sm font-medium">Moderação</a>
+                </nav>
+                <div class="flex items-center gap-4">
+                    <a href="{% url 'logout' %}" class="flex items-center gap-2 text-gray-500 hover:text-red-600 text-sm font-medium transition-colors"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg> Sair</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <div class="mb-2">
+                <a href="/meus-interesses/" class="text-sm text-gray-500 hover:text-blue-600 transition-colors font-bold">&larr; Voltar para Moderação</a>
+                <h2 class="text-2xl font-bold text-gray-900 mt-2">Atividade do fórum da disciplina {{ disciplina.nome }}</h2>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px]">
+            <div class="p-3 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <button id="btn-voltar-forum" onclick="voltarListaForum()" class="hidden text-blue-600 font-bold hover:text-blue-800 transition-colors">← Voltar</button>
+                    <h3 id="titulo-forum" class="font-semibold text-gray-800">Fórum de Dúvidas</h3>
+                </div>
+                <button id="btn-criar-topico" onclick="openModal('modal-topico')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Criar tópico</button>
+            </div>
+            
+            <div id="lista-topicos" class="p-6 space-y-4 h-[500px] overflow-y-auto">
+                
+                {% if topicos %}
+                    {% for item in topicos %}
+                    <div id="card-topico-{{ item.objeto.id }}" class="bg-white rounded-xl border border-gray-100 hover:border-blue-500 transition-all overflow-hidden">
+                        <div class="p-5">
+                            <button onclick="expandirTopico('{{ item.objeto.id }}')" class="w-full text-left focus:outline-none group">
+                                <h4 class="font-bold text-gray-800 mb-2 group-hover:text-blue-600">{{ item.objeto.titulo }}</h4>
+                                
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-blue-600">{{ item.objeto.autor.first_name|default:item.objeto.autor.username }}</span>
+                                        
+                                        {% if item.objeto.autor.is_admin %}
+                                            <span class="text-[9px] bg-purple-100 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded font-bold ml-1 uppercase tracking-wide">ADMIN</span>
+                                        {% endif %}
+
+                                        {% if resp3.objeto.autor.monitor_de and resp3.objeto.autor.monitor_de.codigo == disciplina.codigo %}
+                                            <span class="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold">MONITOR</span>
+                                        {% endif %}
+
+                                        {% if not item.objeto.autor.is_admin %}
+                                        <div role="button" onclick="event.stopPropagation(); abrirModalSuspender('{{ item.objeto.autor.first_name|default:item.objeto.autor.username }}')" class="text-amber-500 hover:text-amber-700 p-1 hover:bg-amber-50 rounded-full transition-colors" title="Suspender Usuário">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                            </svg>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-[10px] text-gray-400 font-medium">{{ item.objeto.data_envio|date:"d/m/Y H:i" }}</span>
+                                        <div role="button" onclick="event.stopPropagation(); abrirModalExcluir('{{ item.objeto.autor.first_name|default:item.objeto.autor.username }}')" class="text-gray-400 hover:text-red-600 p-1 rounded-full hover:bg-red-50 transition-colors" title="Excluir Tópico">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p class="text-gray-500 text-sm line-clamp-2">{{ item.objeto.texto }}</p>
+                                <div class="mt-3 text-xs text-gray-400">{{ item.total_respostas }} resposta{{ item.total_respostas|pluralize:"s" }}</div>
+                            </button>
+                        </div>
+                        
+                        <div id="detalhes-{{ item.objeto.id }}" class="hidden px-5 pb-5 bg-white">
+                            
+                            <div class="mt-3 flex justify-end">
+                                <button onclick="toggleAreaResposta('resp-{{ item.objeto.id }}')" class="text-gray-400 hover:text-blue-600" title="Responder">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" stroke-width="2"/></svg>
+                                </button>
+                            </div>
+                            <div id="resp-{{ item.objeto.id }}" class="hidden mt-3">
+                                <form method="POST" class="flex gap-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="form_type" value="responder_topico">
+                                    <input type="hidden" name="id_mensagem" value="{{ item.objeto.id }}">
+                                    <textarea name="texto" placeholder="Responder ao tópico..." class="flex-1 p-2 text-sm bg-gray-50 border rounded-lg outline-none resize-none" rows="2" required></textarea>
+                                    <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold self-end">Enviar</button>
+                                </form>
+                            </div>
+
+                            {% if item.respostas %}
+                            <div class="pt-4 border-t border-gray-100 mt-4">
+                                <p class="text-xs font-bold text-gray-500 mb-3">Respostas:</p>
+                                
+                                {% for resp1 in item.respostas %}
+                                <div class="mb-3">
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold text-blue-600">{{ resp1.objeto.autor.first_name|default:resp1.objeto.autor.username }}</span>
+                                                
+                                                {% if resp1.objeto.autor.is_admin %}
+                                                    <span class="text-[9px] bg-purple-100 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">ADMIN</span>
+                                                {% endif %}
+
+                                                {% if resp1.objeto.autor.monitor_de and resp1.objeto.autor.monitor_de.codigo == disciplina.codigo %}
+                                                    <span class="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold">MONITOR</span>
+                                                {% endif %}
+                                                
+                                                {% if not resp1.objeto.autor.is_admin %}
+                                                    <button onclick="abrirModalSuspender('{{ resp1.objeto.autor.first_name|default:resp1.objeto.autor.username }}')" class="text-amber-500 hover:text-amber-700 p-1 hover:bg-amber-50 rounded-full transition-colors" title="Suspender Usuário">
+                                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                        </svg>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-[10px] text-gray-400">{{ resp1.objeto.data_envio|date:"d/m/Y H:i" }}</span>
+                                                <button onclick="abrirModalExcluir('{{ resp1.objeto.autor.first_name|default:resp1.objeto.autor.username }}')" class="text-gray-400 hover:text-red-600 transition-colors" title="Excluir Resposta">
+                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-gray-700">{{ resp1.objeto.texto }}</p>
+                                        
+                                        <div class="mt-2 flex justify-end">
+                                            <button onclick="toggleAreaResposta('resp-{{ resp1.objeto.id }}')" class="text-gray-400 hover:text-blue-600">
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" stroke-width="2"/></svg>
+                                            </button>
+                                        </div>
+                                        <div id="resp-{{ resp1.objeto.id }}" class="hidden mt-2">
+                                            <form method="POST" class="flex gap-2">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="form_type" value="responder_topico">
+                                                <input type="hidden" name="id_mensagem" value="{{ resp1.objeto.id }}">
+                                                <textarea name="texto" placeholder="Sua resposta..." class="flex-1 p-2 text-sm bg-white border rounded-lg outline-none resize-none" rows="2" required></textarea>
+                                                <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold self-end">Enviar</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if resp1.respostas %}
+                                    {% for resp2 in resp1.respostas %}
+                                    <div class="ml-4 border-l-2 border-blue-100 pl-3 mt-2">
+                                        <div class="bg-blue-50/50 rounded-lg p-3">
+                                            <div class="flex justify-between items-start mb-2">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-xs font-bold text-blue-600">{{ resp2.objeto.autor.first_name|default:resp2.objeto.autor.username }}</span>
+                                                    
+                                                    {% if resp2.objeto.autor.is_admin %}
+                                                        <span class="text-[9px] bg-purple-100 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">ADMIN</span>
+                                                    {% endif %}
+
+                                                    {% if resp2.objeto.autor.monitor_de and resp2.objeto.autor.monitor_de.codigo == disciplina.codigo %}
+                                                        <span class="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold">MONITOR</span>
+                                                    {% endif %}
+                                                    
+                                                    {% if not resp2.objeto.autor.is_admin %}
+                                                        <button onclick="abrirModalSuspender('{{ resp2.objeto.autor.first_name|default:resp2.objeto.autor.username }}')" class="text-amber-500 hover:text-amber-700 p-1 hover:bg-amber-50 rounded-full transition-colors" title="Suspender Usuário">
+                                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="flex items-center gap-3">
+                                                    <span class="text-[10px] text-gray-400">{{ resp2.objeto.data_envio|date:"d/m/Y H:i" }}</span>
+                                                    <button onclick="abrirModalExcluir('{{ resp2.objeto.autor.first_name|default:resp2.objeto.autor.username }}')" class="text-gray-400 hover:text-red-600 transition-colors" title="Excluir Resposta">
+                                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <p class="text-sm text-gray-700">{{ resp2.objeto.texto }}</p>
+                                            
+                                            <div class="mt-2 flex justify-end">
+                                                <button onclick="toggleAreaResposta('resp-{{ resp2.objeto.id }}')" class="text-gray-400 hover:text-blue-600">
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" stroke-width="2"/></svg>
+                                                </button>
+                                            </div>
+                                            <div id="resp-{{ resp2.objeto.id }}" class="hidden mt-2">
+                                                <form method="POST" class="flex gap-2">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="form_type" value="responder_topico">
+                                                    <input type="hidden" name="id_mensagem" value="{{ resp2.objeto.id }}">
+                                                    <textarea name="texto" placeholder="Sua resposta..." class="flex-1 p-2 text-sm bg-white border rounded-lg outline-none resize-none" rows="2" required></textarea>
+                                                    <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold self-end">Enviar</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if resp2.respostas %}
+                                        {% for resp3 in resp2.respostas %}
+                                        <div class="ml-4 border-l-2 border-blue-200 pl-3 mt-2">
+                                            <div class="bg-gray-100/50 rounded-lg p-3">
+                                                <div class="flex justify-between items-start mb-2">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-xs font-bold text-blue-600">{{ resp3.objeto.autor.first_name|default:resp3.objeto.autor.username }}</span>
+                                                        
+                                                        {% if resp3.objeto.autor.is_admin %}
+                                                            <span class="text-[9px] bg-purple-100 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">ADMIN</span>
+                                                        {% endif %}
+
+                                                        {% if resp3.objeto.autor.monitor_de and resp3.objeto.autor.monitor_de.codigo == disciplina.codigo %}
+                                                            <span class="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold">MONITOR</span>
+                                                        {% endif %}
+                                                        
+                                                        {% if not resp3.objeto.autor.is_admin %}
+                                                            <button onclick="abrirModalSuspender('{{ resp3.objeto.autor.first_name|default:resp3.objeto.autor.username }}')" class="text-amber-500 hover:text-amber-700 p-1 hover:bg-amber-50 rounded-full transition-colors" title="Suspender Usuário">
+                                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                                            </button>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                    <div class="flex items-center gap-3">
+                                                        <span class="text-[10px] text-gray-400">{{ resp3.objeto.data_envio|date:"d/m/Y H:i" }}</span>
+                                                        <button onclick="abrirModalExcluir('{{ resp3.objeto.autor.first_name|default:resp3.objeto.autor.username }}')" class="text-gray-400 hover:text-red-600 transition-colors" title="Excluir Resposta">
+                                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <p class="text-sm text-gray-700">{{ resp3.objeto.texto }}</p>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+
+                    <div class="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhum tópico ainda</h3>
+                        <p class="mt-1 text-sm text-gray-500">Aguarde os alunos criarem dúvidas!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-topico" class="fixed inset-0 z-[60] hidden overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-topico')"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center"><h3 class="text-lg font-bold text-gray-900">Criar Novo Tópico</h3><button onclick="closeModal('modal-topico')" class="text-gray-400 hover:text-gray-600">✕</button></div>
+                <div id="error-alert-topico" class="hidden mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-center gap-2"><span id="error-message-topico"></span></div>
+                <form onsubmit="validarTopico(event)" class="p-6 space-y-4">
+                    <div>Assunto: <input type="text" id="topico-assunto" class="w-full p-2 border rounded-lg" placeholder="Assunto da mensagem"></div>
+                    <div>Explicação: <textarea id="topico-texto" rows="4" class="w-full p-2 border rounded-lg" placeholder="Corpo da mensagem..."></textarea></div>
+                    <div class="flex gap-3 pt-4"><button type="button" onclick="closeModal('modal-topico')" class="flex-1 p-2 border rounded-lg">Cancelar</button><button type="submit" class="flex-1 bg-blue-600 text-white rounded-lg">Publicar</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-excluir" class="fixed inset-0 z-[60] hidden overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-excluir')"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center overflow-hidden">
+                <button onclick="closeModal('modal-excluir')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">✕</button>
+                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 mb-4">
+                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Excluir Mensagem</h3>
+                <p class="text-sm text-gray-500 mb-6">Deseja excluir a mensagem de <span id="nome-excluir" class="font-bold text-gray-800"></span>?</p>
+                <div class="flex gap-3">
+                    <button onclick="closeModal('modal-excluir')" class="flex-1 py-2 px-4 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium">Cancelar</button>
+                    <button onclick="closeModal('modal-excluir');" class="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-suspender" class="fixed inset-0 z-[60] hidden overflow-y-auto" role="dialog" aria-modal="true">
+    
+    <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-suspender')"></div>
+    
+    <div class="flex items-center justify-center min-h-screen p-4">
+        
+        <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+            
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-900">Suspender Usuário</h3>
+                <button onclick="closeModal('modal-suspender')" class="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+
+            <form onsubmit="suspenderUsuario(event)" class="p-6 space-y-4">
+                
+                <div class="flex flex-col items-center mb-4">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 mb-2">
+                        <svg class="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <p class="text-sm text-gray-500">
+                        Defina a data final da suspensão para <span id="nome-suspender" class="font-bold text-gray-800"></span> no fórum da disciplina {{ disciplina.nome }}.
+                    </p>
+                </div>
+
+                <div>
+                    Data Final: 
+                    <input type="date" id="data_final" required class="w-full p-2 border rounded-lg">
+                </div>
+                
+                <div>
+                    Motivo: 
+                    <textarea id="motivo" rows="4" required class="w-full p-2 border rounded-lg" placeholder="Descreva o motivo..."></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeModal('modal-suspender')" class="flex-1 p-2 border rounded-lg">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-amber-500 text-white rounded-lg hover:bg-amber-600">Confirmar</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+    <script>
+
+    function definirDataMinima() {
+        const hoje = new Date().toISOString().split('T')[0];
+        document.getElementById('data_final').setAttribute('min', hoje);
+    }
+    document.addEventListener('DOMContentLoaded', definirDataMinima);
+
+    function suspenderUsuario(event) {
+        event.preventDefault(); 
+        const dataFinal = document.getElementById('data_final').value;
+        const motivo = document.getElementById('motivo').value;
+        console.log("Dados enviados:", dataFinal, motivo);
+        closeModal('modal-suspender');
+        document.getElementById('form-suspensao').reset();
+    }
+        function toggleAreaResposta(id) {
+            document.querySelectorAll('[id^="resp-"]').forEach(a => { if(a.id !== id) a.classList.add('hidden') });
+            const elem = document.getElementById(id);
+            if(elem) {
+                elem.classList.toggle('hidden');
+                if (!elem.classList.contains('hidden')) elem.querySelector('textarea').focus();
+            }
+        }
+
+        function expandirTopico(id) {
+            document.getElementById('btn-criar-topico').classList.add('hidden');
+            document.querySelectorAll('#lista-topicos > div').forEach(c => {
+                if (c.id !== `card-topico-${id}`) c.classList.add('hidden');
+            });
+            document.getElementById('btn-voltar-forum').classList.remove('hidden');
+            const detalhes = document.getElementById(`detalhes-${id}`);
+            if(detalhes) detalhes.classList.remove('hidden');
+        }
+        function voltarListaForum() {
+            document.getElementById('btn-criar-topico').classList.remove('hidden');
+            document.getElementById('btn-voltar-forum').classList.add('hidden');
+            document.querySelectorAll('#lista-topicos > div').forEach(c => {
+                c.classList.remove('hidden');
+                const d = c.querySelector('[id^="detalhes-"]');
+                if(d) d.classList.add('hidden');
+                c.querySelectorAll('[id^="resp-"]').forEach(r => r.classList.add('hidden'));
+            });}
+
+        const openModal = id => { 
+            document.getElementById(id).classList.remove('hidden'); 
+            document.body.style.overflow = 'hidden'; 
+            document.querySelector('main').style.filter = 'blur(4px)'; 
+        }
+
+        const closeModal = (id) => { 
+            if(id) {
+                document.getElementById(id).classList.add('hidden');
+            } else {
+                document.querySelectorAll('.fixed').forEach(m => m.classList.add('hidden')); 
+            }
+            let algumAberto = false;
+            document.querySelectorAll('.fixed[role="dialog"]').forEach(m => {
+                if(!m.classList.contains('hidden')) algumAberto = true;
+            });
+            if(!algumAberto) {
+                document.body.style.overflow = 'auto'; 
+                document.querySelector('main').style.filter = 'none'; 
+            }
+        }
+
+        function abrirModalExcluir(nome) {
+            document.getElementById('nome-excluir').innerText = nome;
+            openModal('modal-excluir');
+        }
+
+        function abrirModalSuspender(nome) {
+            document.getElementById('nome-suspender').innerText = nome;
+            openModal('modal-suspender');
+        }
+
+        function validarTopico(e) {
+            e.preventDefault();
+            if (!document.getElementById('topico-assunto').value.trim() || !document.getElementById('topico-texto').value.trim()) { 
+                document.getElementById('error-alert-topico').classList.remove('hidden'); 
+                document.getElementById('error-message-topico').innerText="Preencha tudo."; 
+                return; 
+            }
+            closeModal('modal-topico');
+        }
+    </script>
+</body>
+</html>
