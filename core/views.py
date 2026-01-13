@@ -25,8 +25,65 @@ from core.services.horario_atendimento_service import HorarioAtendimentoService
 from core.services.mensagem_service import MensagemForumService
 from core.exceptions.mensagem_exceptions import TopicosAindaNaoCadastradosException
 from core.exceptions.horario_atendimento_exceptions import HorarioNaoExisteException
-    
+from core.services.notificacao_service import NotificacaoService
 
+def get_notificacoes_context(user):
+    """
+    Retorna o context de notificações para o usuário logado.
+    Agrupa notificações por tópico raiz.
+    """
+    try: 
+        qs = NotificacaoService.getNotificacoesAluno(user)
+        nao_lidas_total = qs.filter(lida=False).count()
+        notificacoes_agrupadas = {}
+        
+        for notif in qs.order_by('-data_criacao'):
+            if notif.mensagem_forum:
+                topico_raiz = notif.mensagem_forum
+                while topico_raiz.resposta_para is not None:
+                    topico_raiz = topico_raiz.resposta_para
+                
+                topico_id = topico_raiz.id
+                
+                if topico_id not in notificacoes_agrupadas:
+                    notificacoes_agrupadas[topico_id] = {
+                        'topico': topico_raiz,
+                        'disciplina': topico_raiz.disciplina,
+                        'titulo': topico_raiz.titulo,
+                        'ultima_notificacao': notif,
+                        'nao_lidas': 0,
+                        'total': 0
+                    }
+                
+                notificacoes_agrupadas[topico_id]['total'] += 1
+                if not notif.lida:
+                    notificacoes_agrupadas[topico_id]['nao_lidas'] += 1
+            else:
+                notif_id = f"other_{notif.id}"
+                notificacoes_agrupadas[notif_id] = {
+                    'topico': None,
+                    'disciplina': None,
+                    'titulo': notif.titulo,
+                    'ultima_notificacao': notif,
+                    'nao_lidas': 1 if not notif.lida else 0,
+                    'total': 1
+                }
+    
+        notificacoes_lista = sorted(
+            notificacoes_agrupadas.values(),
+            key=lambda x: x['ultima_notificacao'].data_criacao,
+            reverse=True
+        )[:10]
+        
+    except Exception as e:
+        print(f"[ERRO] get_notificacoes_context: {e}")
+        notificacoes_lista = []
+        nao_lidas_total = 0
+    
+    return {
+        'notificacoes': notificacoes_lista,
+        'notificacoes_nao_lidas': nao_lidas_total
+    }
 
 def cadastro_view(request):
     if request.method == 'POST':
@@ -203,6 +260,7 @@ def dashboard(request):
         'aluno_nome': request.user.first_name if request.user.is_authenticated else 'Aluno Visitante',
         'horarios': mock_horarios,
         'topicos': mock_topicos,
+        **get_notificacoes_context(request.user)
     }
     return render(request, 'core/dashboard.html', context)
 
@@ -254,7 +312,8 @@ def perfil_view(request):
         },
         'aluno_nome': aluno.first_name,
         'sucesso': sucesso,
-        'erro': erro
+        'erro': erro,
+        **get_notificacoes_context(aluno)
     }
     return render(request, 'core/perfil.html', context)
 
@@ -304,7 +363,8 @@ def disciplinas_view(request):
 
     context = {
         'aluno_nome': aluno_logado.first_name,
-        'disciplinas': lista_final
+        'disciplinas': lista_final,
+        **get_notificacoes_context(aluno_logado)
     }
     return render(request, 'core/lista_disciplina.html', context)
 
@@ -317,7 +377,8 @@ def meus_interesses_view(request):
 
     return render(request, 'core/meus_interesses.html', {
         'interesses': interesses,
-        'aluno_nome': aluno.first_name
+        'aluno_nome': aluno.first_name,
+        **get_notificacoes_context(aluno)
     })
 
  
@@ -413,7 +474,7 @@ def disciplina_view(request, codigo_disciplina):
         except Exception as e:
             messages.error(request, f"Erro: {str(e)}")
         
-        return redirect('disciplina_monitor', codigo_disciplina=codigo_disciplina)
+        return redirect('disciplina', codigo_disciplina=codigo_disciplina)
 
     # 2. CARREGAR DADOS (GET)
     
@@ -480,12 +541,72 @@ def disciplina_view(request, codigo_disciplina):
         'horarios_agrupados': horarios_agrupados,
         'topicos': topicos_lista,
         'aluno': aluno,
-        'eh_monitor_desta': eh_monitor_desta
+        'eh_monitor_desta': eh_monitor_desta,
+        **get_notificacoes_context(aluno)
     }
 
-    template = 'core/disciplina_monitor.html' if eh_monitor_desta else 'core/disciplina.html'
-    return render(request, template, context)
+    if eh_monitor_desta:
+        return render(request, 'core/disciplina_monitor.html', context)
+    else:
+        return render(request, 'core/disciplina.html', context)
+    
+    
+@login_required(login_url='login')
+def notificacoes_view(request):
+    """
+    Página completa de histórico de notificações.
+    """
+    from datetime import date, timedelta
+    
+    aluno = request.user
+    
+    try:
+        todas_notificacoes = NotificacaoService.getNotificacoesAluno(aluno).order_by('-data_criacao')
+    except:
+        todas_notificacoes = []
+    
+    context = {
+        'aluno_nome': aluno.first_name,
+        'todas_notificacoes': todas_notificacoes,
+        'hoje': date.today(),
+        'ontem': date.today() - timedelta(days=1),
+        **get_notificacoes_context(aluno)
+    }
+    
+    return render(request, 'core/notificacoes.html', context)
 
+
+@login_required(login_url='login')
+def marcar_notificacao_lida(request, notificacao_id):
+    """
+    Marca notificação(ões) como lida(s).
+    Se pertence a um tópico, marca todas do tópico.
+    """
+    from django.http import JsonResponse, Http404
+    
+    resultado = NotificacaoService.marcarNotificacaoETopicoComoLidos(notificacao_id, request.user)
+    
+    if resultado is None:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Notificação não encontrada'}, status=404)
+        raise Http404("Notificação não encontrada")
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True})
+    
+    return redirect('notificacoes')
+
+
+@login_required(login_url='login')
+def marcar_todas_notificacoes_lidas(request):
+    """
+    Marca todas as notificações do usuário como lidas.
+    """
+    from django.http import JsonResponse
+    from core.models import Notificacao
+    
+    Notificacao.objects.filter(destinatario=request.user, lida=False).update(lida=True)
+    return JsonResponse({'success': True})
 
 # Views para Administradores
 

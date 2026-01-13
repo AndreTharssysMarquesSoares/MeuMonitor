@@ -12,7 +12,10 @@ urlpatterns = [
     path('disciplinas/', views.disciplinas_view, name='disciplinas'),
     path('perfil/', views.perfil_view, name='perfil'),
     path('interesses/', views.meus_interesses_view, name='meus_interesses'),
-    path('disciplina/<str:codigo_disciplina>/', views.disciplina_view, name='disciplina_monitor'),
+    path('disciplina/<str:codigo_disciplina>/', views.disciplina_view, name='disciplina'),
+    path('notificacoes/', views.notificacoes_view, name='notificacoes'),
+    path('notificacoes/marcar-lida/<int:notificacao_id>/', views.marcar_notificacao_lida, name='marcar_notificacao_lida'),
+    path('notificacoes/marcar-todas-lidas/', views.marcar_todas_notificacoes_lidas, name='marcar_todas_lidas'),
 
     path('gerenciar/monitores/', views.admin_monitores_view, name='admin_monitores'),
     path('gerenciar/disciplinas/', views.admin_disciplinas_view, name='admin_disciplinas'),

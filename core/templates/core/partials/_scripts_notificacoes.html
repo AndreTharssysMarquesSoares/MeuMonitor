@@ -1,0 +1,73 @@
+<script>
+    function marcarComoLida(id) {
+        let elementId = id.toString().startsWith('notif-') ? id : `notif-${id}`;
+        const card = document.getElementById(elementId);
+        
+        fetch(`/notificacoes/marcar-lida/${id}/`, {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(response => {
+            if (response.ok) {
+                if(card) {
+                    card.classList.remove('border-l-blue-500', 'bg-blue-50');
+                    card.classList.add('border-l-transparent', 'bg-white', 'opacity-75');
+                    
+                    // Esconder o ponto azul pulsante
+                    const dot = card.querySelector('.status-dot');
+                    if(dot) dot.classList.add('hidden');
+                    
+                    // Esconder o badge vermelho de contagem
+                    const badge = card.querySelector('.bg-red-500');
+                    if(badge) badge.classList.add('hidden');
+                }
+                atualizarContadorNotificacoes();
+            }
+        }).catch(error => console.error('Erro ao marcar como lida:', error));
+    }
+
+    function marcarTodasLidas() {
+        fetch('/notificacoes/marcar-todas-lidas/', {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(response => {
+            if (response.ok) {
+                const cards = document.querySelectorAll('.notificacao-item');
+                cards.forEach(card => {
+                    // Remover estilos de "não lida"
+                    card.classList.remove('border-l-blue-500', 'bg-blue-50');
+                    card.classList.add('border-l-transparent', 'bg-white', 'opacity-75');
+                    
+                    // Esconder o ponto azul pulsante
+                    const dot = card.querySelector('.status-dot');
+                    if(dot) dot.classList.add('hidden');
+                    
+                    // Esconder o badge vermelho de contagem dentro do card
+                    const badge = card.querySelector('.bg-red-500');
+                    if(badge) badge.classList.add('hidden');
+                });
+                
+                // Atualizar o contador do sininho no header
+                atualizarContadorNotificacoes();
+            }
+        }).catch(error => console.error('Erro ao marcar todas como lidas:', error));
+    }
+    
+    function atualizarContadorNotificacoes() {
+        // Remove o badge vermelho do sininho no header
+        const badgeSininho = document.querySelector('#btn-notificacoes span.bg-red-500');
+        if (badgeSininho) badgeSininho.remove();
+    }
+
+    function toggleNotificacoes() {
+        const dropdown = document.getElementById('notificacoes-dropdown');
+        dropdown.classList.toggle('hidden');
+    }
+
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('notificacoes-dropdown');
+        const btn = document.getElementById('btn-notificacoes');
+        if (btn && dropdown && !btn.contains(event.target) && !dropdown.contains(event.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+</script>

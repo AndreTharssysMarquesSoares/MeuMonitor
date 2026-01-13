@@ -23,16 +23,58 @@ class NotificacaoService:
                 raise NotificacaoInvalidaException()
             
         if texto is None or titulo == "" or texto == "": raise NotificacaoInvalidaException()
-            
+
+        tipo_map = {
+            'Fórum': 'FORUM',
+            'Sistema': 'SISTEMA', 
+            'Administração': 'ADMIN'
+        }
+        tipo_db = tipo_map.get(tipo.value, 'FORUM')
+
         notificacao = NotificacaoRepository.notificar(
-            tipo = tipo,
+            tipo = tipo_db,
             titulo = titulo,
             texto = texto,
             destinatario = destinatario,
             mensagem_forum = mensagem_forum,
         )
-        
+
         return notificacao
+    
+    @staticmethod
+    def marcarNotificacaoETopicoComoLidos(notificacao_id, usuario):
+        """
+        Marca como lida a notificação E todas as outras do mesmo tópico.
+        """
+        from core.models import Notificacao, MensagemForum
+        
+        try:
+            notificacao = Notificacao.objects.get(id=notificacao_id, destinatario=usuario)
+        except Notificacao.DoesNotExist:
+            return None
+
+        if notificacao.mensagem_forum:
+            topico_raiz = notificacao.mensagem_forum
+            while topico_raiz.resposta_para is not None:
+                topico_raiz = topico_raiz.resposta_para
+
+            def coletar_ids(mensagem):
+                ids = [mensagem.id]
+                for resp in MensagemForum.objects.filter(resposta_para=mensagem):
+                    ids.extend(coletar_ids(resp))
+                return ids
+            
+            ids_do_topico = coletar_ids(topico_raiz)
+            Notificacao.objects.filter(
+                destinatario=usuario,
+                mensagem_forum_id__in=ids_do_topico,
+                lida=False
+            ).update(lida=True)
+        else:
+            notificacao.lida = True
+            notificacao.save()
+        
+        return True
     
     @staticmethod
     def getNotificacao(id):

@@ -51,7 +51,7 @@
 
                 <div class="grid gap-4" id="container-disciplinas">
                     {% for disciplina in disciplinas %}
-                    <a href="{% url 'disciplina_monitor' disciplina.codigo %}" 
+                    <a href="{% url 'disciplina' disciplina.codigo %}" 
                        class="card-disciplina bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-blue-500 hover:shadow-md transition-all flex justify-between items-center group">
                         
                         <h3 class="text-xl font-bold text-gray-800 group-hover:text-blue-700 nome-disciplina">
