@@ -271,29 +271,67 @@
     </div>
 
     <div id="modal-suspender" class="fixed inset-0 z-[60] hidden overflow-y-auto" role="dialog" aria-modal="true">
-        <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-suspender')"></div>
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 text-center overflow-hidden">
-                <button onclick="closeModal('modal-suspender')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">✕</button>
-                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 mb-4">
-                    <svg class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                </div>
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Suspender Usuário</h3>
-                <p class="text-sm text-gray-500 mb-6">Defina o tempo de suspensão para <span id="nome-suspender" class="font-bold text-gray-800"></span> no fórum da disciplina {{ disciplina.nome }}.</p>
-                <div class="grid grid-cols-3 gap-4 mb-6 text-left">
-                    <div><label class="block text-xs font-medium text-gray-700 mb-1">Dias</label><input type="number" min="0" value="0" class="w-full p-2 border border-gray-300 rounded-lg text-center focus:ring-amber-500 focus:border-amber-500"></div>
-                    <div><label class="block text-xs font-medium text-gray-700 mb-1">Horas</label><input type="number" min="0" max="23" value="0" class="w-full p-2 border border-gray-300 rounded-lg text-center focus:ring-amber-500 focus:border-amber-500"></div>
-                    <div><label class="block text-xs font-medium text-gray-700 mb-1">Minutos</label><input type="number" min="0" max="59" value="0" class="w-full p-2 border border-gray-300 rounded-lg text-center focus:ring-amber-500 focus:border-amber-500"></div>
-                </div>
-                <div class="flex gap-3">
-                    <button onclick="closeModal('modal-suspender')" class="flex-1 py-2 px-4 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium">Cancelar</button>
-                    <button onclick="closeModal('modal-suspender');" class="flex-1 py-2 px-4 bg-amber-500 text-white rounded-lg hover:bg-amber-600 font-medium">Confirmar</button>
-                </div>
+    
+    <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-suspender')"></div>
+    
+    <div class="flex items-center justify-center min-h-screen p-4">
+        
+        <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+            
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-900">Suspender Usuário</h3>
+                <button onclick="closeModal('modal-suspender')" class="text-gray-400 hover:text-gray-600">✕</button>
             </div>
+
+            <form onsubmit="suspenderUsuario(event)" class="p-6 space-y-4">
+                
+                <div class="flex flex-col items-center mb-4">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 mb-2">
+                        <svg class="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <p class="text-sm text-gray-500">
+                        Defina a data final da suspensão para <span id="nome-suspender" class="font-bold text-gray-800"></span> no fórum da disciplina {{ disciplina.nome }}.
+                    </p>
+                </div>
+
+                <div>
+                    Data Final: 
+                    <input type="date" id="data_final" required class="w-full p-2 border rounded-lg">
+                </div>
+                
+                <div>
+                    Motivo: 
+                    <textarea id="motivo" rows="4" required class="w-full p-2 border rounded-lg" placeholder="Descreva o motivo..."></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeModal('modal-suspender')" class="flex-1 p-2 border rounded-lg">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-amber-500 text-white rounded-lg hover:bg-amber-600">Confirmar</button>
+                </div>
+
+            </form>
         </div>
     </div>
+</div>
 
     <script>
+
+    function definirDataMinima() {
+        const hoje = new Date().toISOString().split('T')[0];
+        document.getElementById('data_final').setAttribute('min', hoje);
+    }
+    document.addEventListener('DOMContentLoaded', definirDataMinima);
+
+    function suspenderUsuario(event) {
+        event.preventDefault(); 
+        const dataFinal = document.getElementById('data_final').value;
+        const motivo = document.getElementById('motivo').value;
+        console.log("Dados enviados:", dataFinal, motivo);
+        closeModal('modal-suspender');
+        document.getElementById('form-suspensao').reset();
+    }
         function toggleAreaResposta(id) {
             document.querySelectorAll('[id^="resp-"]').forEach(a => { if(a.id !== id) a.classList.add('hidden') });
             const elem = document.getElementById(id);
