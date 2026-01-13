@@ -181,3 +181,52 @@ class MensagemForum(models.Model):
     def __str__(self):
         tipo = "Tópico" if self.resposta_para is None else "Resposta"
         return f"[{tipo}] {self.autor.first_name}: {self.texto[:20]}..."
+    
+class Notificacao(models.Model):
+    TIPO_CHOICES = (
+        ('FORUM', 'Fórum'),
+        ('SISTEMA', 'Sistema'),
+        ('ADMIN', 'Administração'),
+    )
+    
+    destinatario = models.ForeignKey(
+        Usuario, 
+        on_delete=models.CASCADE, 
+        related_name='notificacoes'
+    )
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
+
+    mensagem_forum = models.ForeignKey(
+        MensagemForum, 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True,
+        related_name='notificacoes'
+    )
+
+    titulo = models.CharField(max_length=100, blank=True, null=True)
+    texto = models.TextField(blank=True, null=True)
+    
+    lida = models.BooleanField(default=False)
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-data_criacao']
+        verbose_name = "Notificação"
+        verbose_name_plural = "Notificações"
+    
+    def clean(self):
+        if self.tipo == 'FORUM' and not self.mensagem_forum:
+            raise ValidationError("Notificações do tipo FORUM devem referenciar uma mensagem.")
+        
+        if self.tipo in ('SISTEMA', 'ADMIN') and (not self.titulo or not self.texto):
+            raise ValidationError("Notificações do tipo SISTEMA/ADMIN devem ter título e texto.")
+    
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        status = "✓" if self.lida else "●"
+        titulo_display = self.titulo if self.titulo else (self.mensagem_forum.titulo if self.mensagem_forum else "Sem título")
+        return f"{status} [{self.tipo}] {titulo_display}"
