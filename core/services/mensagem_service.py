@@ -318,3 +318,14 @@ class MensagemForumService:
             if 'respostas' in resp and resp['respostas']:
                 total += MensagemForumService.contarRespostasTotal(resp['respostas'])
         return total
+
+    @staticmethod
+    def excluirMensagem(id_mensagem):
+        from core.models import MensagemForum
+        
+        mensagem = MensagemForum.objects.filter(id=id_mensagem).first()
+        if not mensagem:
+            raise Exception("Mensagem não encontrada.")
+
+        mensagem.delete()
+        return True

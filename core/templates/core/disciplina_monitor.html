@@ -165,7 +165,11 @@
                             <button id="btn-voltar-forum" onclick="voltarListaForum()" class="hidden text-blue-600 font-bold hover:text-blue-800 transition-colors">← Voltar</button>
                             <h3 id="titulo-forum" class="font-semibold text-gray-800">Fórum de Dúvidas</h3>
                         </div>
+                        {% if not esta_suspenso %}
                         <button id="btn-criar-topico" onclick="openModal('modal-topico')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Criar tópico</button>
+                        {% else %}
+                        <button id="btn-criar-topico" onclick="openModal('modal-suspenso')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Criar tópico</button>
+                        {% endif %}
                     </div>
 
                     <div id="lista-topicos" class="p-6 space-y-4 h-[500px] overflow-y-auto">
@@ -179,7 +183,7 @@
                                             <div class="flex items-center gap-2">
                                                 <span class="text-xs font-bold text-blue-600">{{ item.objeto.autor.first_name|default:item.objeto.autor.username }}</span>
                                                 
-                                                {% if item.objeto.autor.is_admin %}
+                                                {% if item.objeto.autor.is_staff %}
                                                     <span class="text-[9px] bg-purple-100 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">ADMIN</span>
                                                 {% endif %}
 
@@ -198,10 +202,17 @@
                                  <div id="detalhes-{{ item.objeto.id }}" class="hidden px-5 pb-5 bg-white">
                                     <!-- Botão responder ao tópico principal -->
                                     <div class="mt-3 flex justify-end">
+                                        {% if not esta_suspenso %}
                                         <button onclick="toggleAreaResposta('resp-{{ item.objeto.id }}')" class="text-gray-400 hover:text-blue-600" title="Responder">
                                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" stroke-width="2"/></svg>
                                         </button>
+                                        {% else %}
+                                        <button onclick="openModal('modal-suspenso')" class="text-gray-400 hover:text-blue-600" title="Responder">
+                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" stroke-width="2"/></svg>
+                                        </button>
+                                        {% endif %}
                                     </div>
+                                    {% if not esta_suspenso %}
                                     <div id="resp-{{ item.objeto.id }}" class="hidden mt-3">
                                         <form method="POST" class="flex gap-2">
                                             {% csrf_token %}
@@ -211,6 +222,7 @@
                                             <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold self-end">Enviar</button>
                                         </form>
                                     </div>
+                                    {% endif %}
 
                                     <!-- Respostas (Nível 1) -->
                                     {% if item.respostas %}
@@ -224,7 +236,7 @@
                                                     <div class="flex items-center gap-2">
                                                         <span class="text-xs font-bold text-blue-600">{{ resp1.objeto.autor.first_name|default:resp1.objeto.autor.username }}</span>
                                                         
-                                                        {% if resp1.objeto.autor.is_admin %}
+                                                        {% if resp1.objeto.autor.is_staff %}
                                                             <span class="text-[9px] bg-purple-100 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">ADMIN</span>
                                                         {% endif %}
 
@@ -236,10 +248,17 @@
                                                 </div>
                                                 <p class="text-sm text-gray-700">{{ resp1.objeto.texto }}</p>
                                                 <div class="mt-2 flex justify-end">
+                                                    {% if not esta_suspenso %}
                                                     <button onclick="toggleAreaResposta('resp-{{ resp1.objeto.id }}')" class="text-gray-400 hover:text-blue-600">
                                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" stroke-width="2"/></svg>
                                                     </button>
+                                                    {% else %}
+                                                    <button onclick="openModal('modal-suspenso')" class="text-gray-400 hover:text-blue-600">
+                                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" stroke-width="2"/></svg>
+                                                    </button>
+                                                    {% endif %}
                                                 </div>
+                                                {% if not esta_suspenso %}
                                                 <div id="resp-{{ resp1.objeto.id }}" class="hidden mt-2">
                                                     <form method="POST" class="flex gap-2">
                                                         {% csrf_token %}
@@ -249,6 +268,7 @@
                                                         <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold self-end">Enviar</button>
                                                     </form>
                                                 </div>
+                                                {% endif %}
                                             </div>
                                             
                                             <!-- Respostas (Nível 2) -->
@@ -260,7 +280,7 @@
                                                         <div class="flex items-center gap-2">
                                                             <span class="text-xs font-bold text-blue-600">{{ resp2.objeto.autor.first_name|default:resp2.objeto.autor.username }}</span>
 
-                                                            {% if resp2.objeto.autor.is_admin %}
+                                                            {% if resp2.objeto.autor.is_staff %}
                                                                 <span class="text-[9px] bg-purple-100 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">ADMIN</span>
                                                             {% endif %}
 
@@ -272,10 +292,17 @@
                                                     </div>
                                                     <p class="text-sm text-gray-700">{{ resp2.objeto.texto }}</p>
                                                     <div class="mt-2 flex justify-end">
+                                                        {% if not esta_suspenso %}
                                                         <button onclick="toggleAreaResposta('resp-{{ resp2.objeto.id }}')" class="text-gray-400 hover:text-blue-600">
                                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" stroke-width="2"/></svg>
                                                         </button>
+                                                        {% else %}
+                                                        <button onclick="openModal('modal-suspenso')" class="text-gray-400 hover:text-blue-600">
+                                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" stroke-width="2"/></svg>
+                                                        </button>
+                                                        {% endif %}
                                                     </div>
+                                                    {% if not esta_suspenso %}
                                                     <div id="resp-{{ resp2.objeto.id }}" class="hidden mt-2">
                                                         <form method="POST" class="flex gap-2">
                                                             {% csrf_token %}
@@ -285,6 +312,7 @@
                                                             <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-bold self-end">Enviar</button>
                                                         </form>
                                                     </div>
+                                                    {% endif %}
                                                 </div>
                                                 
                                                 <!-- Respostas (Nível 3) -->
@@ -296,7 +324,7 @@
                                                             <div class="flex items-center gap-2">
                                                                 <span class="text-xs font-bold text-blue-600">{{ resp3.objeto.autor.first_name|default:resp3.objeto.autor.username }}</span>
 
-                                                                {% if resp3.objeto.autor.is_admin %}
+                                                                {% if resp3.objeto.autor.is_staff %}
                                                                     <span class="text-[9px] bg-purple-100 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">ADMIN</span>
                                                                 {% endif %}
 
@@ -438,7 +466,8 @@
         </div>
     </div>
 
-    <!-- Modal Criar Tópico -->
+    <!-- Modal Criar Tópico (só aparece se não estiver suspenso) -->
+    {% if not esta_suspenso %}
     <div id="modal-topico" class="fixed inset-0 z-[60] hidden overflow-y-auto" role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-topico')"></div>
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -466,6 +495,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- Modal Deletar Horário -->
     <div id="modal-deletar" class="fixed inset-0 z-[60] hidden overflow-y-auto" role="dialog" aria-modal="true">
@@ -488,6 +518,48 @@
                         <button type="submit" class="flex-1 p-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-md transition-colors">Sim, excluir</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Aviso de Suspensão -->
+    <div id="modal-suspenso" class="fixed inset-0 z-[60] hidden overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal('modal-suspenso')"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center overflow-hidden">
+                <button onclick="closeModal('modal-suspenso')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">✕</button>
+                
+                <!-- Ícone -->
+                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 mb-4">
+                    <svg class="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                    </svg>
+                </div>
+                
+                <!-- Título -->
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Você está suspenso</h3>
+                
+                <!-- Mensagem -->
+                <p class="text-sm text-gray-500 mb-2">
+                    Você foi suspenso de participar deste fórum até 
+                    <span class="font-bold text-gray-800">{% if suspensao_info %}{{ suspensao_info.data_fim|date:"d/m/Y" }}{% endif %}</span>.
+                </p>
+                
+                {% if suspensao_info and suspensao_info.motivo %}
+                <div class="bg-red-50 border border-red-100 rounded-lg p-3 mb-4 text-left">
+                    <p class="text-xs text-red-600 font-medium">Motivo:</p>
+                    <p class="text-sm text-red-700">{{ suspensao_info.motivo }}</p>
+                </div>
+                {% endif %}
+                
+                <p class="text-xs text-gray-400 mb-6">
+                    Você pode visualizar o fórum, mas não pode criar tópicos ou responder mensagens.
+                </p>
+                
+                <!-- Botão Voltar -->
+                <button type="button" onclick="closeModal('modal-suspenso')" class="w-full py-2.5 px-4 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-xl text-gray-700 font-medium transition-colors">
+                    Voltar
+                </button>
             </div>
         </div>
     </div>
@@ -538,7 +610,7 @@
             });
         }
 
-                function validarHorario(event, tipo) {
+        function validarHorario(event, tipo) {
             const prefixo = tipo === 'add' ? 'add' : 'edit';
             const horaInicio = $(`${prefixo}-hora-inicio`).value;
             const horaFim = $(`${prefixo}-hora-fim`).value;
@@ -595,7 +667,7 @@
             if (id) {
                 $(id).classList.add('hidden');
             } else {
-                document.querySelectorAll('.fixed').forEach(m => m.classList.add('hidden')); 
+                document.querySelectorAll('.fixed[role="dialog"]').forEach(m => m.classList.add('hidden')); 
             }
             document.body.style.overflow = 'auto'; 
             document.querySelector('main').style.filter = 'none';

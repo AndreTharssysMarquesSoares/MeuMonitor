@@ -19,4 +19,6 @@ urlpatterns = [
 
     path('gerenciar/monitores/', views.admin_monitores_view, name='admin_monitores'),
     path('gerenciar/disciplinas/', views.admin_disciplinas_view, name='admin_disciplinas'),
+    path('moderacao/', views.admin_moderacao_view, name='admin_moderacao'),
+    path('moderacao/<str:codigo_disciplina>/', views.admin_moderacao_forum_view, name='admin_moderacao_forum'),
 ] 
