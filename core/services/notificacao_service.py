@@ -155,10 +155,14 @@ class NotificacaoService:
         Envia uma notificação para TODOS os usuários do sistema.
         """
         from core.models import Notificacao
-        
+        from django.core.mail import send_mass_mail, BadHeaderError
+        from django.conf import settings
+
         todos_usuarios = Usuario.objects.filter(is_active=True)
         
         notificacoes_criadas = []
+        emails_para_enviar = []
+
         for usuario in todos_usuarios:
             if usuario.id != remetente.id:
                 notif = Notificacao.objects.create(
@@ -168,5 +172,22 @@ class NotificacaoService:
                     texto=mensagem
                 )
                 notificacoes_criadas.append(notif)
+                    
+                if usuario.email:
+                    email_tuple = (
+                        f"[MeuMonitor] {titulo}",
+                        f"{mensagem}\n\n--\nEste é um comunicado oficial do sistema MeuMonitor.",
+                        settings.DEFAULT_FROM_EMAIL,
+                        [usuario.email]
+                    )
+                    emails_para_enviar.append(email_tuple)   
+
+        if emails_para_enviar:
+            try:
+                send_mass_mail(emails_para_enviar, fail_silently=False)
+            except BadHeaderError:
+                pass
+            except Exception as e:
+                print(f"Erro ao enviar e-mails: {e}")
         
         return notificacoes_criadas
