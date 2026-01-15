@@ -319,6 +319,7 @@ def meus_interesses_view(request):
     aluno = request.user
     
     interesses = aluno.interesses.all()
+    list(messages.get_messages(request))
 
     return render(request, 'core/meus_interesses.html', {
         'interesses': interesses,
@@ -687,7 +688,7 @@ def admin_disciplinas_view(request):
                 if DisciplinaService.exist_Disciplina(codigo):
                     raise DisciplinaJaCadastradaException()
  
-                disc_valida = AdminService.buscarDisciplinaValida(codigo)
+                disc_valida = DisciplinaService.get_disciplinaValida(codigo)
 
                 if not disc_valida:
                     raise CodigoDisciplinaInvalidoException("Disciplina não encontrada ou retorno nulo.")
