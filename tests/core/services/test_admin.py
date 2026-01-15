@@ -1,6 +1,12 @@
 import pytest
 from core.services.admin_service import AdminService
-from core.exceptions.usuario_exceptions import AlunoNaoCadastradoException, SenhaIncorretaException, SenhaFracaException, DadosInvalidoException, AdminJaCadastradoException, UserNameInvalidoException, AdminInvalidoException, UsernameAdminNaoExisteException, AlunoJaDesativadoException, MonitorJaCadastradoException, MonitorNaoCadastradoException, AlunoJaAtivadoException
+from core.services.suspensao_service import SuspensaoService
+from core.services.notificacao_service import *
+from core.exceptions.usuario_exceptions import *
+from core.exceptions.disciplina_exceptions import *
+from datetime import date, timedelta
+from django.utils import timezone
+from types import SimpleNamespace
 
 def test_cadastrar_admin_ja_existente(mocker):
     mocker.patch(
@@ -554,3 +560,416 @@ def test_get_nao_monitores_com_sucesso(mocker):
     assert resultado == nao_monitores_mock
     repo_mock.assert_called_once()
     validar_mock.assert_called_once()
+
+@pytest.fixture
+def dados_validos():
+    return {
+        "username": "admin",
+        "senha": "123",
+        "dataFim": (date.today() + timedelta(days=1)).strftime("%Y-%m-%d"),
+        "motivo": "Indisciplina",
+        "matricula": "2023001",
+        "disciplina": "MAT001"
+    }
+    
+def test_criar_suspensao_sucesso(mocker, dados_validos):
+    mock_admin = object()
+    mock_aluno = object()
+    mock_disciplina = object()
+    mock_suspensao = object()
+
+    mocker.patch("app.services.suspensao_service.AdminService.getAdmin", return_value=mock_admin)
+    mocker.patch("app.services.suspensao_service.UsuarioService.validarSenha", return_value=True)
+    mocker.patch("app.services.suspensao_service.AlunoService.getAluno", return_value=mock_aluno)
+    mocker.patch("app.services.suspensao_service.DisciplinaService.get_Disciplina", return_value=mock_disciplina)
+    mocker.patch("app.services.suspensao_service.SuspensaoService.criarSuspensao", return_value=mock_suspensao)
+
+    resultado = SuspensaoService.criarSuspensao(**dados_validos)
+
+    assert resultado == mock_suspensao
+    
+def test_criar_suspensao_admin_invalido(mocker, dados_validos):
+    mocker.patch("app.services.suspensao_service.AdminService.getAdmin", return_value=None)
+
+    with pytest.raises(AdminInvalidoException):
+        SuspensaoService.criarSuspensao(**dados_validos)
+
+def test_criar_suspensao_senha_incorreta(mocker, dados_validos):
+    mock_admin = object()
+
+    mocker.patch("app.services.suspensao_service.AdminService.getAdmin", return_value=mock_admin)
+    mocker.patch("app.services.suspensao_service.UsuarioService.validarSenha", return_value=False)
+
+    with pytest.raises(SenhaIncorretaException):
+        SuspensaoService.criarSuspensao(**dados_validos)
+
+@pytest.mark.parametrize("campo", ["dataFim", "motivo", "matricula", "disciplina"])
+def test_criar_suspensao_dados_invalidos_vazios(mocker, dados_validos, campo):
+    mocker.patch("app.services.suspensao_service.AdminService.getAdmin", return_value=object())
+    mocker.patch("app.services.suspensao_service.UsuarioService.validarSenha", return_value=True)
+
+    dados_validos[campo] = ""
+
+    with pytest.raises(DadosInvalidoException):
+        SuspensaoService.criarSuspensao(**dados_validos)
+
+def test_criar_suspensao_data_fim_formato_invalido(mocker, dados_validos):
+    mocker.patch("app.services.suspensao_service.AdminService.getAdmin", return_value=object())
+    mocker.patch("app.services.suspensao_service.UsuarioService.validarSenha", return_value=True)
+
+    dados_validos["dataFim"] = "10/10/2025"
+
+    with pytest.raises(DadosInvalidoException):
+        SuspensaoService.criarSuspensao(**dados_validos)
+
+def test_criar_suspensao_data_fim_menor_ou_igual_hoje(mocker, dados_validos):
+    mocker.patch("app.services.suspensao_service.AdminService.getAdmin", return_value=object())
+    mocker.patch("app.services.suspensao_service.UsuarioService.validarSenha", return_value=True)
+
+    dados_validos["dataFim"] = timezone.now().date().strftime("%Y-%m-%d")
+
+    with pytest.raises(DadosInvalidoException):
+        SuspensaoService.criarSuspensao(**dados_validos)
+
+def test_criar_suspensao_aluno_nao_cadastrado(mocker, dados_validos):
+    mocker.patch("app.services.suspensao_service.AdminService.getAdmin", return_value=object())
+    mocker.patch("app.services.suspensao_service.UsuarioService.validarSenha", return_value=True)
+    mocker.patch("app.services.suspensao_service.AlunoService.getAluno", return_value=None)
+
+    with pytest.raises(AlunoNaoCadastradoException):
+        SuspensaoService.criarSuspensao(**dados_validos)
+
+def test_criar_suspensao_disciplina_invalida(mocker, dados_validos):
+    mocker.patch("app.services.suspensao_service.AdminService.getAdmin", return_value=object())
+    mocker.patch("app.services.suspensao_service.UsuarioService.validarSenha", return_value=True)
+    mocker.patch("app.services.suspensao_service.AlunoService.getAluno", return_value=object())
+    mocker.patch("app.services.suspensao_service.DisciplinaService.get_Disciplina", return_value=None)
+
+    with pytest.raises(CodigoDisciplinaInvalidoException):
+        SuspensaoService.criarSuspensao(**dados_validos)
+
+def test_remover_suspensoes_matricula_sucesso(mocker):
+    mocker.patch(
+        "app.services.suspensao_service.AdminService.getAdmin",
+        return_value=object()
+    )
+    mocker.patch(
+        "app.services.suspensao_service.UsuarioService.validarSenha",
+        return_value=True
+    )
+    mocker.patch(
+        "app.services.suspensao_service.AlunoService.getAluno",
+        return_value=object()
+    )
+    remover_mock = mocker.patch(
+        "app.services.suspensao_service.SuspensaoService.removerSuspensaoMatricula"
+    )
+
+    SuspensaoService.removerSuspensoesMatricula(
+        "admin",
+        "123",
+        "2023001"
+    )
+
+    remover_mock.assert_called_once_with("2023001")
+
+
+def test_remover_suspensoes_matricula_admin_invalido(mocker):
+    mocker.patch(
+        "app.services.suspensao_service.AdminService.getAdmin",
+        return_value=None
+    )
+
+    with pytest.raises(AdminInvalidoException):
+        SuspensaoService.removerSuspensoesMatricula(
+            "admin",
+            "123",
+            "2023001"
+        )
+
+
+def test_remover_suspensoes_matricula_senha_incorreta(mocker):
+    mocker.patch(
+        "app.services.suspensao_service.AdminService.getAdmin",
+        return_value=object()
+    )
+    mocker.patch(
+        "app.services.suspensao_service.UsuarioService.validarSenha",
+        return_value=False
+    )
+
+    with pytest.raises(SenhaIncorretaException):
+        SuspensaoService.removerSuspensoesMatricula(
+            "admin",
+            "123",
+            "2023001"
+        )
+
+def test_remover_suspensoes_matricula_aluno_nao_cadastrado(mocker):
+    mocker.patch(
+        "app.services.suspensao_service.AdminService.getAdmin",
+        return_value=object()
+    )
+    mocker.patch(
+        "app.services.suspensao_service.UsuarioService.validarSenha",
+        return_value=True
+    )
+    mocker.patch(
+        "app.services.suspensao_service.AlunoService.getAluno",
+        return_value=None
+    )
+
+    with pytest.raises(AlunoNaoCadastradoException):
+        SuspensaoService.removerSuspensoesMatricula(
+            "admin",
+            "123",
+            "2023001"
+        )
+
+def test_remover_suspensoes_matricula_disciplina_sucesso(mocker):
+    mocker.patch(
+        "app.services.suspensao_service.AdminService.getAdmin",
+        return_value=object()
+    )
+    mocker.patch(
+        "app.services.suspensao_service.UsuarioService.validarSenha",
+        return_value=True
+    )
+    mocker.patch(
+        "app.services.suspensao_service.AlunoService.getAluno",
+        return_value=object()
+    )
+    remover_mock = mocker.patch(
+        "app.services.suspensao_service.SuspensaoService.removerSuspensaoMatriculaDisciplina"
+    )
+
+    SuspensaoService.removerSuspensoesMatrculaDisciplina(
+        "admin",
+        "123",
+        "2023001",
+        "MAT001"
+    )
+
+    remover_mock.assert_called_once_with("2023001", "MAT001")
+
+
+def test_remover_suspensoes_matricula_disciplina_admin_invalido(mocker):
+    mocker.patch(
+        "app.services.suspensao_service.AdminService.getAdmin",
+        return_value=None
+    )
+
+    with pytest.raises(AdminInvalidoException):
+        SuspensaoService.removerSuspensoesMatrculaDisciplina(
+            "admin",
+            "123",
+            "2023001",
+            "MAT001"
+        )
+
+
+def test_remover_suspensoes_matricula_disciplina_senha_incorreta(mocker):
+    mocker.patch(
+        "app.services.suspensao_service.AdminService.getAdmin",
+        return_value=object()
+    )
+    mocker.patch(
+        "app.services.suspensao_service.UsuarioService.validarSenha",
+        return_value=False
+    )
+
+    with pytest.raises(SenhaIncorretaException):
+        SuspensaoService.removerSuspensoesMatrculaDisciplina(
+            "admin",
+            "123",
+            "2023001",
+            "MAT001"
+        )
+
+
+def test_remover_suspensoes_matricula_disciplina_aluno_nao_cadastrado(mocker):
+    mocker.patch(
+        "app.services.suspensao_service.AdminService.getAdmin",
+        return_value=object()
+    )
+    mocker.patch(
+        "app.services.suspensao_service.UsuarioService.validarSenha",
+        return_value=True
+    )
+    mocker.patch(
+        "app.services.suspensao_service.AlunoService.getAluno",
+        return_value=None
+    )
+
+    with pytest.raises(AlunoNaoCadastradoException):
+        SuspensaoService.removerSuspensoesMatrculaDisciplina(
+            "admin",
+            "123",
+            "2023001",
+            "MAT001"
+        )
+        
+def test_enviar_mensagem_todos_usuarios_como_admin_sucesso(mocker):
+    mocker.patch(
+        "app.services.suspensao_service.AdminService.getAdmin",
+        return_value=object()
+    )
+    mocker.patch(
+        "app.services.suspensao_service.UsuarioService.validarSenha",
+        return_value=True
+    )
+
+    alunos_fake = [
+        SimpleNamespace(matricula="2023001"),
+        SimpleNamespace(matricula="2023002")
+    ]
+
+    mocker.patch(
+        "app.services.suspensao_service.AlunoService.getAlunos",
+        return_value=alunos_fake
+    )
+
+    gerar_mock = mocker.patch(
+        "app.services.suspensao_service.NotificacaoService.gerarNotificacao"
+    )
+
+    SuspensaoService.enviarMensagemTodosUsuariosComoAdmin(
+        "admin",
+        "123",
+        "Aviso",
+        "Mensagem importante"
+    )
+
+    assert gerar_mock.call_count == 2
+    gerar_mock.assert_any_call(
+        TipoNotificacao.ADMIN,
+        "Aviso",
+        "Mensagem importante",
+        "2023001"
+    )
+    gerar_mock.assert_any_call(
+        TipoNotificacao.ADMIN,
+        "Aviso",
+        "Mensagem importante",
+        "2023002"
+    )
+
+
+def test_enviar_mensagem_todos_usuarios_como_admin_admin_invalido(mocker):
+    mocker.patch(
+        "app.services.suspensao_service.AdminService.getAdmin",
+        return_value=None
+    )
+
+    with pytest.raises(AdminInvalidoException):
+        SuspensaoService.enviarMensagemTodosUsuariosComoAdmin(
+            "admin",
+            "123",
+            "Aviso",
+            "Mensagem importante"
+        )
+
+
+def test_enviar_mensagem_todos_usuarios_como_admin_senha_incorreta(mocker):
+    mocker.patch(
+        "app.services.suspensao_service.AdminService.getAdmin",
+        return_value=object()
+    )
+    mocker.patch(
+        "app.services.suspensao_service.UsuarioService.validarSenha",
+        return_value=False
+    )
+
+    with pytest.raises(SenhaIncorretaException):
+        SuspensaoService.enviarMensagemTodosUsuariosComoAdmin(
+            "admin",
+            "123",
+            "Aviso",
+            "Mensagem importante"
+        )
+
+def test_enviar_mensagem_todos_usuarios_como_sistema_sucesso(mocker):
+    mocker.patch(
+        "app.services.suspensao_service.AdminService.getAdmin",
+        return_value=object()
+    )
+    mocker.patch(
+        "app.services.suspensao_service.UsuarioService.validarSenha",
+        return_value=True
+    )
+
+    alunos_fake = [
+        SimpleNamespace(matricula="2023001"),
+        SimpleNamespace(matricula="2023002"),
+        SimpleNamespace(matricula="2023003")
+    ]
+
+    mocker.patch(
+        "app.services.suspensao_service.AlunoService.getAlunos",
+        return_value=alunos_fake
+    )
+
+    gerar_mock = mocker.patch(
+        "app.services.suspensao_service.NotificacaoService.gerarNotificacao"
+    )
+
+    SuspensaoService.enviarMensagemTodosUsuariosComoSistema(
+        "admin",
+        "123",
+        "Sistema",
+        "Mensagem do sistema"
+    )
+
+    assert gerar_mock.call_count == 3
+    gerar_mock.assert_any_call(
+        TipoNotificacao.SISTEMA,
+        "Sistema",
+        "Mensagem do sistema",
+        "2023001"
+    )
+    gerar_mock.assert_any_call(
+        TipoNotificacao.SISTEMA,
+        "Sistema",
+        "Mensagem do sistema",
+        "2023002"
+    )
+    gerar_mock.assert_any_call(
+        TipoNotificacao.SISTEMA,
+        "Sistema",
+        "Mensagem do sistema",
+        "2023003"
+    )
+
+
+def test_enviar_mensagem_todos_usuarios_como_sistema_admin_invalido(mocker):
+    mocker.patch(
+        "app.services.suspensao_service.AdminService.getAdmin",
+        return_value=None
+    )
+
+    with pytest.raises(AdminInvalidoException):
+        SuspensaoService.enviarMensagemTodosUsuariosComoSistema(
+            "admin",
+            "123",
+            "Sistema",
+            "Mensagem do sistema"
+        )
+
+
+def test_enviar_mensagem_todos_usuarios_como_sistema_senha_incorreta(mocker):
+    mocker.patch(
+        "app.services.suspensao_service.AdminService.getAdmin",
+        return_value=object()
+    )
+    mocker.patch(
+        "app.services.suspensao_service.UsuarioService.validarSenha",
+        return_value=False
+    )
+
+    with pytest.raises(SenhaIncorretaException):
+        SuspensaoService.enviarMensagemTodosUsuariosComoSistema(
+            "admin",
+            "123",
+            "Sistema",
+            "Mensagem do sistema"
+        )

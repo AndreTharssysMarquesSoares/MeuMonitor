@@ -244,6 +244,8 @@ class AdminService:
         admin = AdminService.getAdmin(username)
         if not admin: raise AdminInvalidoException()
         if not UsuarioService.validarSenha(admin, senha): raise SenhaIncorretaException()
+        aluno = AlunoService.getAluno(matricula)
+        if not aluno: raise AlunoNaoCadastradoException
         
         SuspensaoService.removerSuspensaoMatricula(matricula)
         
@@ -253,6 +255,8 @@ class AdminService:
         admin = AdminService.getAdmin(username)
         if not admin: raise AdminInvalidoException()
         if not UsuarioService.validarSenha(admin, senha): raise SenhaIncorretaException()
+        aluno = AlunoService.getAluno(matricula)
+        if not aluno: raise AlunoNaoCadastradoException
         
         SuspensaoService.removerSuspensaoMatriculaDisciplina(matricula, disciplina)
         
