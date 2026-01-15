@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -123,3 +124,23 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'core.Usuario'
+
+
+# Tenta ler do arquivo .env. Se não achar, retorna vazio ('').
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+
+if EMAIL_HOST_PASSWORD:
+    # Senha configurada
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    print("📧 [SISTEMA] Modo de E-mail: REAL (SMTP Gmail conectado)")
+else:
+    # Sem senha
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    print("[SISTEMA] Modo de E-mail: CONSOLE (Simulação - verifique o terminal)")
+
+_remetente = EMAIL_HOST_USER if EMAIL_HOST_USER else 'teste@meumonitor.com'
+DEFAULT_FROM_EMAIL = f'Meu Monitor <{_remetente}>'

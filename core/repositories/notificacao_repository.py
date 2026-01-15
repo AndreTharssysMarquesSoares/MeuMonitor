@@ -9,7 +9,7 @@ class NotificacaoRepository:
     
     @staticmethod
     def salvar(notificacao):
-        Notificacao.save(notificacao)
+        Notificacao.save()
     
     @staticmethod
     def getNotificacao(id):
@@ -17,4 +17,7 @@ class NotificacaoRepository:
     
     @staticmethod
     def getNotificacoesAluno(matricula) -> QuerySet[Notificacao]:
-        return Notificacao.objects.filter(destinatario=matricula)
+        if isinstance(matricula, str):
+            return Notificacao.objects.filter(destinatario__username=matricula)
+        else:
+            return Notificacao.objects.filter(destinatario=matricula)

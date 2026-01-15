@@ -9,11 +9,16 @@ from django.utils import timezone
 
 class SuspensaoService:
     
-    #Verificação se Aluno existe ou disciplina existe feita em admin
-    #Verificação da corretude dos dados em admin
     @staticmethod
     def criarSuspensao(dataFim, motivo, aluno, disciplina):
         
+        from core.models import Usuario, Disciplina
+        
+        if isinstance(aluno, str):
+            aluno = AlunoService.getAluno(aluno)
+        if isinstance(disciplina, str):
+            disciplina = DisciplinaService.get_Disciplina(disciplina)
+
         hoje = timezone.now().date()
         suspensoes = SuspensaoService.getSuspensoesAlunoDisciplina(aluno, disciplina)
         
@@ -69,11 +74,71 @@ class SuspensaoService:
     @staticmethod
     def getSuspensoesAlunoDisciplina(matricula, codigo):
         
-        aluno = AlunoService.getAluno(matricula)
-        if not aluno: raise AlunoInvalidoException()
+        from core.models import Usuario, Disciplina
         
-        disciplina = DisciplinaService.get_Disciplina(codigo)
-        if not disciplina: raise CodigoDisciplinaInvalidoException()
+        if isinstance(matricula, str):
+            aluno = AlunoService.getAluno(matricula)
+        else:
+            aluno = matricula
+            
+        if isinstance(codigo, str):
+            disciplina = DisciplinaService.get_Disciplina(codigo)
+        else:
+            disciplina = codigo
         
-        return SuspensaoRepository.getSuspensoesMatriculaDisciplina(matricula, codigo)
+        return SuspensaoRepository.getSuspensoesMatriculaDisciplina(aluno, disciplina)
+    
+    @staticmethod
+    def verificarSuspensaoAtiva(matricula, codigo_disciplina):
+        """
+        Verifica se um aluno está suspenso em uma disciplina.
+        Retorna True se estiver suspenso, False caso contrário.
+        """
+        from core.models import Suspensao
+        
+        hoje = timezone.now().date()
+        
+        # Se for string, buscar objetos
+        if isinstance(matricula, str):
+            aluno = AlunoService.getAluno(matricula)
+        else:
+            aluno = matricula
+            
+        if isinstance(codigo_disciplina, str):
+            disciplina = DisciplinaService.get_Disciplina(codigo_disciplina)
+        else:
+            disciplina = codigo_disciplina
+        
+        return Suspensao.objects.filter(
+            aluno=aluno,
+            disciplina=disciplina,
+            data_inicio__lte=hoje,
+            data_fim__gte=hoje
+        ).exists()
+    
+    @staticmethod
+    def getSuspensaoAtiva(matricula, codigo_disciplina):
+        """
+        Retorna a suspensão ativa de um aluno em uma disciplina, se existir.
+        """
+        from core.models import Suspensao
+        
+        hoje = timezone.now().date()
+        
+        if isinstance(matricula, str):
+            aluno = AlunoService.getAluno(matricula)
+        else:
+            aluno = matricula
+            
+        if isinstance(codigo_disciplina, str):
+            disciplina = DisciplinaService.get_Disciplina(codigo_disciplina)
+        else:
+            disciplina = codigo_disciplina
+        
+        return Suspensao.objects.filter(
+            aluno=aluno,
+            disciplina=disciplina,
+            data_inicio__lte=hoje,
+            data_fim__gte=hoje
+        ).first()
     

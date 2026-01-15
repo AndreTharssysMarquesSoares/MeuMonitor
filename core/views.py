@@ -25,7 +25,9 @@ from core.services.horario_atendimento_service import HorarioAtendimentoService
 from core.services.mensagem_service import MensagemForumService
 from core.exceptions.mensagem_exceptions import TopicosAindaNaoCadastradosException
 from core.exceptions.horario_atendimento_exceptions import HorarioNaoExisteException
-    
+from core.services.notificacao_service import NotificacaoService
+from core.models import MensagemForum
+from core.services.suspensao_service import SuspensaoService
 
 
 def cadastro_view(request):
@@ -203,6 +205,7 @@ def dashboard(request):
         'aluno_nome': request.user.first_name if request.user.is_authenticated else 'Aluno Visitante',
         'horarios': mock_horarios,
         'topicos': mock_topicos,
+        **NotificacaoService.getContextoNotificacoesAgrupadas(request.user)
     }
     return render(request, 'core/dashboard.html', context)
 
@@ -254,7 +257,8 @@ def perfil_view(request):
         },
         'aluno_nome': aluno.first_name,
         'sucesso': sucesso,
-        'erro': erro
+        'erro': erro,
+        **NotificacaoService.getContextoNotificacoesAgrupadas(request.user)
     }
     return render(request, 'core/perfil.html', context)
 
@@ -304,7 +308,8 @@ def disciplinas_view(request):
 
     context = {
         'aluno_nome': aluno_logado.first_name,
-        'disciplinas': lista_final
+        'disciplinas': lista_final,
+        **NotificacaoService.getContextoNotificacoesAgrupadas(request.user)
     }
     return render(request, 'core/lista_disciplina.html', context)
 
@@ -314,10 +319,12 @@ def meus_interesses_view(request):
     aluno = request.user
     
     interesses = aluno.interesses.all()
+    list(messages.get_messages(request))
 
     return render(request, 'core/meus_interesses.html', {
         'interesses': interesses,
-        'aluno_nome': aluno.first_name
+        'aluno_nome': aluno.first_name,
+        **NotificacaoService.getContextoNotificacoesAgrupadas(request.user)
     })
 
  
@@ -336,14 +343,37 @@ def disciplina_view(request, codigo_disciplina):
     except CodigoDisciplinaInvalidoException:
         messages.error(request, "Esta disciplina não existe no sistema.")
         return redirect('meus_interesses')
+    
+    storage = messages.get_messages(request)
+    storage.used = True
 
     eh_monitor_desta = (aluno.monitor_de == disciplina)
+
+    esta_suspenso = False
+    suspensao_info = None
+    if not aluno.is_staff:  # Admins não podem ser suspensos
+        try:
+            suspensao_ativa = SuspensaoService.getSuspensaoAtiva(aluno.username, codigo_disciplina)
+            if suspensao_ativa:
+                esta_suspenso = True
+                suspensao_info = {
+                    'data_fim': suspensao_ativa.data_fim,
+                    'motivo': suspensao_ativa.motivo
+                }
+        except:
+            pass
     
     # 1. PROCESSAR FORMULÁRIOS (POST)
     if request.method == 'POST':
         form_type = request.POST.get('form_type')
         
         try:
+            # Verificar suspensão antes de permitir postagens no fórum
+            if form_type in ['novo_topico', 'responder_topico']:
+                if esta_suspenso:
+                    messages.error(request, f"Você está suspenso neste fórum até {suspensao_info['data_fim'].strftime('%d/%m/%Y')}. Motivo: {suspensao_info['motivo']}")
+                    return redirect('disciplina', codigo_disciplina=codigo_disciplina)
+                            
             # --- Tópicos do Fórum ---
             if form_type == 'novo_topico':
                 MensagemForumService.criarTopicoWeb(
@@ -413,7 +443,7 @@ def disciplina_view(request, codigo_disciplina):
         except Exception as e:
             messages.error(request, f"Erro: {str(e)}")
         
-        return redirect('disciplina_monitor', codigo_disciplina=codigo_disciplina)
+        return redirect('disciplina', codigo_disciplina=codigo_disciplina)
 
     # 2. CARREGAR DADOS (GET)
     
@@ -480,12 +510,74 @@ def disciplina_view(request, codigo_disciplina):
         'horarios_agrupados': horarios_agrupados,
         'topicos': topicos_lista,
         'aluno': aluno,
-        'eh_monitor_desta': eh_monitor_desta
+        'eh_monitor_desta': eh_monitor_desta,
+        'esta_suspenso': esta_suspenso,
+        'suspensao_info': suspensao_info,        
+        **NotificacaoService.getContextoNotificacoesAgrupadas(request.user)
     }
 
-    template = 'core/disciplina_monitor.html' if eh_monitor_desta else 'core/disciplina.html'
-    return render(request, template, context)
+    if eh_monitor_desta:
+        return render(request, 'core/disciplina_monitor.html', context)
+    else:
+        return render(request, 'core/disciplina.html', context)
+    
+    
+@login_required(login_url='login')
+def notificacoes_view(request):
+    """
+    Página completa de histórico de notificações.
+    """
+    from datetime import date, timedelta
+    
+    aluno = request.user
+    
+    try:
+        todas_notificacoes = NotificacaoService.getNotificacoesAluno(aluno).order_by('-data_criacao')
+    except:
+        todas_notificacoes = []
+    
+    context = {
+        'aluno_nome': aluno.first_name,
+        'todas_notificacoes': todas_notificacoes,
+        'hoje': date.today(),
+        'ontem': date.today() - timedelta(days=1),
+        **NotificacaoService.getContextoNotificacoesAgrupadas(request.user)
+    }
+    
+    return render(request, 'core/notificacoes.html', context)
 
+
+@login_required(login_url='login')
+def marcar_notificacao_lida(request, notificacao_id):
+    """
+    Marca notificação(ões) como lida(s).
+    Se pertence a um tópico, marca todas do tópico.
+    """
+    from django.http import JsonResponse, Http404
+    
+    resultado = NotificacaoService.marcarNotificacaoETopicoComoLidos(notificacao_id, request.user)
+    
+    if resultado is None:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Notificação não encontrada'}, status=404)
+        raise Http404("Notificação não encontrada")
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True})
+    
+    return redirect('notificacoes')
+
+
+@login_required(login_url='login')
+def marcar_todas_notificacoes_lidas(request):
+    """
+    Marca todas as notificações do usuário como lidas.
+    """
+    from django.http import JsonResponse
+    from core.models import Notificacao
+    
+    Notificacao.objects.filter(destinatario=request.user, lida=False).update(lida=True)
+    return JsonResponse({'success': True})
 
 # Views para Administradores
 
@@ -596,7 +688,7 @@ def admin_disciplinas_view(request):
                 if DisciplinaService.exist_Disciplina(codigo):
                     raise DisciplinaJaCadastradaException()
  
-                disc_valida = AdminService.buscarDisciplinaValida(codigo)
+                disc_valida = DisciplinaService.get_disciplinaValida(codigo)
 
                 if not disc_valida:
                     raise CodigoDisciplinaInvalidoException("Disciplina não encontrada ou retorno nulo.")
@@ -645,3 +737,157 @@ def admin_disciplinas_view(request):
         'codigo_pesquisado': codigo_pesquisado
     }
     return render(request, 'core/disciplinas_admin.html', context)
+
+
+@login_required(login_url='login')
+def admin_moderacao_view(request):
+
+    if not request.user.is_staff:
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        acao = request.POST.get('acao')
+        
+        if acao == 'enviar_comunicado':
+            titulo = request.POST.get('titulo', '').strip()
+            mensagem = request.POST.get('mensagem', '').strip()
+            
+            if titulo and mensagem:
+                try:
+                    NotificacaoService.enviarComunicadoGeral(
+                        titulo=titulo,
+                        mensagem=mensagem,
+                        remetente=request.user
+                    )
+                    messages.success(request, "Comunicado enviado para todos os usuários!")
+                except Exception as e:
+                    messages.error(request, f"Erro ao enviar comunicado: {str(e)}")
+            else:
+                messages.error(request, "Preencha o título e a mensagem.")
+            
+            return redirect('admin_moderacao')
+
+    try:
+        todas_disciplinas = DisciplinaService.get_todas_disciplinas()
+    except:
+        todas_disciplinas = []
+    
+    lista_disciplinas = []
+    for d in todas_disciplinas:
+        lista_disciplinas.append({
+            'codigo': d.codigo,
+            'nome': d.nome,
+        })
+    
+    context = {
+        'admin_nome': request.user.first_name or "Administrador",
+        'disciplinas': lista_disciplinas,
+    }
+    
+    return render(request, 'core/moderacao.html', context)
+
+
+@login_required(login_url='login')
+def admin_moderacao_forum_view(request, codigo_disciplina):
+    """
+    Tela de moderação do fórum de uma disciplina específica.
+    Permite: responder, excluir mensagens e suspender usuários.
+    """
+    
+    if not request.user.is_staff:
+        return redirect('dashboard')
+
+    try:
+        disciplina = DisciplinaService.get_Disciplina(codigo_disciplina)
+    except CodigoDisciplinaInvalidoException:
+        messages.error(request, "Disciplina não encontrada.")
+        return redirect('admin_moderacao')
+
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+        
+        try:
+            # Criar novo tópico
+            if form_type == 'novo_topico':
+                MensagemForumService.criarTopicoWeb(
+                    matricula=request.user.username,
+                    codigoDisciplina=codigo_disciplina,
+                    titulo=request.POST.get('titulo'),
+                    texto=request.POST.get('texto')
+                )
+                messages.success(request, "Tópico criado com sucesso!")
+            
+            # Responder tópico
+            elif form_type == 'responder_topico':
+                id_msg = request.POST.get('id_mensagem')
+                MensagemForumService.responderTopicoWeb(
+                    matricula=request.user.username,
+                    idMensagem=id_msg,
+                    texto=request.POST.get('texto')
+                )
+                messages.success(request, "Resposta enviada!")
+                
+                # Redirecionar mantendo o tópico expandido
+                mensagem = MensagemForum.objects.get(id=id_msg)
+                topico_raiz = mensagem
+                while topico_raiz.resposta_para is not None:
+                    topico_raiz = topico_raiz.resposta_para
+                    
+                return redirect(f"{request.path}?expandir={topico_raiz.id}")
+            
+            # Excluir mensagem
+            elif form_type == 'excluir_mensagem':
+                id_msg = request.POST.get('id_mensagem')
+                MensagemForumService.excluirMensagem(id_msg)
+                messages.success(request, "Mensagem excluída com sucesso!")
+            
+            # Suspender usuário
+            elif form_type == 'suspender_usuario':
+                matricula = request.POST.get('matricula')
+                data_fim = request.POST.get('data_fim')
+                motivo = request.POST.get('motivo', '').strip()
+                
+                if not matricula or not data_fim or not motivo:
+                    messages.error(request, "Preencha todos os campos para suspender.")
+                else:
+                    from datetime import datetime
+                    data_fim_parsed = datetime.strptime(data_fim, '%Y-%m-%d').date()
+                    
+                    aluno = AlunoService.getAluno(matricula)
+                    SuspensaoService.criarSuspensao(
+                        dataFim=data_fim_parsed,
+                        motivo=motivo,
+                        aluno=aluno,
+                        disciplina=disciplina
+                    )
+                    messages.success(request, f"Usuário {aluno.first_name or matricula} suspenso até {data_fim}!")
+        
+        except Exception as e:
+            messages.error(request, f"Erro: {str(e)}")
+        
+        return redirect('admin_moderacao_forum', codigo_disciplina=codigo_disciplina)
+    
+    # Carregar tópicos do fórum
+    topicos_lista = []
+    try:
+        objs_topicos = MensagemForumService.getTopicosDaDisciplina(codigo_disciplina).order_by('-data_envio')
+        
+        for t in objs_topicos:
+            respostas_aninhadas = MensagemForumService.getRespostasComAninhamento(t.id)
+            topicos_lista.append({
+                'objeto': t,
+                'respostas': respostas_aninhadas,
+                'total_respostas': MensagemForumService.contarRespostasTotal(respostas_aninhadas)
+            })
+    except TopicosAindaNaoCadastradosException:
+        pass
+    except Exception as e:
+        print(f"Erro ao buscar tópicos: {e}")
+    
+    context = {
+        'admin_nome': request.user.first_name or "Administrador",
+        'disciplina': disciplina,
+        'topicos': topicos_lista,
+    }
+    
+    return render(request, 'core/moderacao_foruns.html', context)

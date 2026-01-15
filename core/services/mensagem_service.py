@@ -200,7 +200,7 @@ class MensagemForumService:
         from core.models import Usuario, Disciplina
 
         try:
-            aluno = Usuario.objects.get(username=matricula)
+            autor = Usuario.objects.get(username=matricula)
         except Usuario.DoesNotExist:
             raise Exception("Aluno não encontrado.")
 
@@ -216,12 +216,26 @@ class MensagemForumService:
             raise Exception("O texto não pode estar vazio.")
  
         topico = MensagemForumRepository.criarMensagem(
-            autor=aluno,
+            autor=autor,
             disciplina=disciplina,
             titulo=titulo.strip(),
             texto=texto.strip(),
             resposta_para=None
         )
+
+        interessados = Usuario.objects.filter(interesses=disciplina).exclude(username=matricula)
+
+        for destinatario in interessados:
+            try:
+                NotificacaoService.gerarNotificacao(
+                    tipo=TipoNotificacao.FORUM,
+                    titulo=f"Novo tópico em {disciplina.nome}",
+                    texto=f"{autor.first_name} criou: {titulo}",
+                    destinatario=destinatario,
+                    mensagem_forum=topico
+                )
+            except Exception as e:
+                print(f"Erro ao notificar {destinatario.username}: {e}")
         
         return topico
     
@@ -233,7 +247,7 @@ class MensagemForumService:
         from core.models import Usuario, MensagemForum
 
         try:
-            aluno = Usuario.objects.get(username=matricula)
+            autor = Usuario.objects.get(username=matricula)
         except Usuario.DoesNotExist:
             raise Exception("Aluno não encontrado.")
 
@@ -246,12 +260,31 @@ class MensagemForumService:
             raise Exception("A resposta não pode estar vazia.")
 
         resposta = MensagemForumRepository.criarMensagem(
-            autor=aluno,
+            autor=autor,
             disciplina=mensagem_pai.disciplina,
             titulo=None,
             texto=texto.strip(),
             resposta_para=mensagem_pai
         )
+
+        topico_raiz = mensagem_pai
+        while topico_raiz.resposta_para is not None:
+            topico_raiz = topico_raiz.resposta_para
+        
+        disciplina = topico_raiz.disciplina
+        interessados = Usuario.objects.filter(interesses=disciplina).exclude(username=matricula)
+        
+        for destinatario in interessados:
+            try:
+                NotificacaoService.gerarNotificacao(
+                    tipo=TipoNotificacao.FORUM,
+                    titulo=f"Nova resposta em '{topico_raiz.titulo}'",
+                    texto=f"{autor.first_name} respondeu no fórum",
+                    destinatario=destinatario,
+                    mensagem_forum=resposta
+                )
+            except Exception as e:
+                print(f"Erro ao notificar {destinatario.username}: {e}")
         
         return resposta
     
@@ -285,3 +318,14 @@ class MensagemForumService:
             if 'respostas' in resp and resp['respostas']:
                 total += MensagemForumService.contarRespostasTotal(resp['respostas'])
         return total
+
+    @staticmethod
+    def excluirMensagem(id_mensagem):
+        from core.models import MensagemForum
+        
+        mensagem = MensagemForum.objects.filter(id=id_mensagem).first()
+        if not mensagem:
+            raise Exception("Mensagem não encontrada.")
+
+        mensagem.delete()
+        return True
