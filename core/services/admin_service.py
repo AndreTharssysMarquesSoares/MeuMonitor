@@ -244,8 +244,10 @@ class AdminService:
         admin = AdminService.getAdmin(username)
         if not admin: raise AdminInvalidoException()
         if not UsuarioService.validarSenha(admin, senha): raise SenhaIncorretaException()
+        aluno = AlunoService.getAluno(matricula)
+        if not aluno: raise AlunoNaoCadastradoException
         
-        SuspensaoService.removerSuspensaoMatricula(matricula)
+        SuspensaoService.removerSuspensoesMatricula(matricula)
         
         
     @staticmethod
@@ -253,8 +255,10 @@ class AdminService:
         admin = AdminService.getAdmin(username)
         if not admin: raise AdminInvalidoException()
         if not UsuarioService.validarSenha(admin, senha): raise SenhaIncorretaException()
+        aluno = AlunoService.getAluno(matricula)
+        if not aluno: raise AlunoNaoCadastradoException
         
-        SuspensaoService.removerSuspensaoMatriculaDisciplina(matricula, disciplina)
+        SuspensaoService.removerSuspensoesMatriculaDisciplina(matricula, disciplina)
         
     @staticmethod
     def enviarMensagemTodosUsuariosComoAdmin(username, senha, titulo, texto):
